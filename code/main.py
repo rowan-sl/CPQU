@@ -99,3 +99,5 @@ class Memory:
 class Computer:
     def __init__(self, program: list) -> None:
         ...
+
+raise SegmentionFault("oopsie")
