@@ -40,7 +40,7 @@ class StoreInequality(Instruction):
 
     Values must be in a register, or in memory.
     Values are cast to and compared as <type>
-    
+
     Supported types: `int`, `float`, `str`, `bool`
 
     see types.InequalityType for a list of supported inequalities
@@ -52,10 +52,26 @@ class StoreInequality(Instruction):
     nargs = 5
 
 
+class CastTo(Instruction):
+    """
+    Casts the first instruction to `type` in place
+    value must be in a register, or in memory
+
+    Useage: `<mode> cst <arg1> <type>`
+
+    Supported types: `int`, `float`, `str`, `bool`
+    """
+
+    name = "cst"
+    nargs = 2
+
+
 class AddTo(Instruction):
     """
     adds the first two arguments and stores it in the third
     Values must be in a register, or in memory.
+
+    Type: args are cast to type before they are added
 
     Useage: `<mode> add <type> <arg1> <arg2> <arg3>`
     """
@@ -85,16 +101,18 @@ class MultiplyTo(Instruction):
 
     Basicaly the same as `add`, but for multiplication
 
-    Useage: `<mode> mlt <type> <arg1> <arg2> <arg3>`
+    Casts each argument to its respective type, usefull for multiplying strings
+
+    Useage: `<mode> mlt <type1> <arg1> <type2> <arg2> <arg3>`
     """
 
     name = "mlt"
-    nargs = 4
+    nargs = 5
 
 
 class DevideoTo(Instruction):
     """
-    multiplys the first two arguments and stores it in the third
+    devides the first two arguments and stores it in the third
     Values must be in a register, or in memory.
 
     Basicaly the same as `mlt`, but for devision
@@ -158,18 +176,20 @@ class CopyIfEqual(Instruction):
     nargs = 4
 
 
-class JumpIfEqual(Instruction):
+class JumpIfTrue(Instruction):
     """
     jump if two values are equal.
     Values must be in registers, or in memory.
 
-    Useage: `<mode> jeq <arg1> <arg2> <addr>`
+    Useage: `<mode> jit <arg1> <addr>`
 
-    If `arg1` and `arg2` are found to be equal, then it jumps to `addr`
+    arg1 must be a register, or in memory
+
+    If `arg1` is found to be True (with cast), then it jumps to `addr`
     """
 
-    name = "jeq"
-    nargs = 3
+    name = "jit"
+    nargs = 2
 
 
 class JumpTo(Instruction):

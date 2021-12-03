@@ -57,7 +57,7 @@ class Memory:
         self.mem.clear()
 
     def wat(self, val, adr):
-        print(f"writing {val} to {adr}")
+        # print(f"writing {val} to {adr}")
         """
         Writes val to adr.
         If adr is larger than the maximum address in memory, raises SegmentationFault
@@ -73,9 +73,9 @@ class Memory:
             raise ValueError("adr cannot be less than 0!")
 
         else:
-            print("prev mem\n", self.mem)
+            # print("prev mem\n", self.mem)
             self.mem[adr] = val
-            print("modified mem\n", self.mem)
+            # print("modified mem\n", self.mem)
 
 
     def rat(self, adr):
@@ -94,7 +94,7 @@ class Memory:
             raise ValueError("adr cannot be less than 0!")
 
         else:
-            print(f"reading value {self.mem[adr]} from {adr}")
+            # print(f"reading value {self.mem[adr]} from {adr}")
             return self.mem[adr]
 
     def size(self):

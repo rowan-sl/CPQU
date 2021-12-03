@@ -1,0 +1,19 @@
+sto "e" str raa
+sto 10 int rab
+sto 5 int rac
+cpy raa out
+cpy rab out
+cpy rac out
+add int rab rac rra
+sub int rab rac rrs
+div int rac rab rrd
+mlt int rac int rab rrm
+mlt str raa int rab rms
+add str raa raa ras
+cpy rra out
+cpy rrs out
+cpy rrd out
+cpy rrm out
+cpy rms out
+cpy ras out
+hlt

@@ -58,11 +58,15 @@ class CPQUProcessor:
 
         #~ get the next mode
         active_mode_string = self.mem.rat(self.inst_ptr)
-        self.inst_ptr += 1
         active_mode = self.parse_mode(active_mode_string)
 
         if active_mode is False:
-            raise BadInstruction(f"Encountered non-mode string {active_mode_string} at {self.inst_ptr}!!")
+            if self.parse_opcode(active_mode_string) is not False:
+                active_mode = RelativeMode
+            else:
+                raise BadInstruction(f"Encountered non-mode string {active_mode_string} at {self.inst_ptr}!!")
+        else:
+            self.inst_ptr += 1
         if active_mode is True:
             print(f"program reached opcode `hlt` at addr {self.inst_ptr-1}, exiting gracefully!")
             sys.exit(0)
@@ -75,15 +79,15 @@ class CPQUProcessor:
 
         #~ read the instruction's args
         args = []
-        print(self.inst_ptr)
+        # print(self.inst_ptr)
         for i in range(active_inst.nargs):
             # print(self.mem.mem)
             # print(self.inst_ptr, self.mem.rat(self.inst_ptr))
             args.append(self.mem.rat(self.inst_ptr+i+1))
-            print(self.inst_ptr)
+            # print(self.inst_ptr)
 
-        print(active_inst.__name__, args)
-        print(self.inst_ptr)
+        # print(active_inst.__name__, args)
+        # print(self.inst_ptr)
 
         #~ do a thing with that
         match active_inst:
@@ -132,6 +136,77 @@ class CPQUProcessor:
                 
                 self.inst_ptr += active_inst.nargs+1
 
+            case ins.CastTo:
+                addr1 = args[0]
+                cst_type = args[1]
+                
+                val = self.read_addr(addr1, active_mode)
+                #~cast and write to the same addr
+                self.write_addr(addr1, val, active_mode, cst_type)
+                
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.AddTo:
+                type_str = args[0]
+                arg1_addr_as_read = args[1]
+                arg2_addr_as_read = args[2]
+                dest_addr_as_read = args[3]
+
+                arg1_val = self.cast_type(self.read_addr(arg1_addr_as_read, active_mode), type_str)
+                arg2_val = self.cast_type(self.read_addr(arg2_addr_as_read, active_mode), type_str)
+
+                result = arg1_val + arg2_val
+
+                self.write_addr(dest_addr_as_read, result, active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.SubtractTo:
+                type_str = args[0]
+                arg1_addr_as_read = args[1]
+                arg2_addr_as_read = args[2]
+                dest_addr_as_read = args[3]
+
+                arg1_val = self.cast_type(self.read_addr(arg1_addr_as_read, active_mode), type_str)
+                arg2_val = self.cast_type(self.read_addr(arg2_addr_as_read, active_mode), type_str)
+
+                result = arg1_val - arg2_val
+
+                self.write_addr(dest_addr_as_read, result, active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.DevideoTo:
+                type_str = args[0]
+                arg1_addr_as_read = args[1]
+                arg2_addr_as_read = args[2]
+                dest_addr_as_read = args[3]
+
+                arg1_val = self.cast_type(self.read_addr(arg1_addr_as_read, active_mode), type_str)
+                arg2_val = self.cast_type(self.read_addr(arg2_addr_as_read, active_mode), type_str)
+
+                result = arg1_val / arg2_val
+
+                self.write_addr(dest_addr_as_read, result, active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.MultiplyTo:
+                type_str1 = args[0]
+                arg1_addr_as_read = args[1]
+                type_str2 = args[2]
+                arg2_addr_as_read = args[3]
+                dest_addr_as_read = args[4]
+
+                arg1_val = self.cast_type(self.read_addr(arg1_addr_as_read, active_mode), type_str1)
+                arg2_val = self.cast_type(self.read_addr(arg2_addr_as_read, active_mode), type_str2)
+
+                result = arg1_val * arg2_val
+
+                self.write_addr(dest_addr_as_read, result, active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
             case ins.MoveTo:
                 addr1 = args[0]
                 addr2 = args[1]
@@ -144,6 +219,33 @@ class CPQUProcessor:
                 
                 self.inst_ptr += active_inst.nargs+1
 
+            case ins.CopyTo:
+                addr1 = args[0]
+                addr2 = args[1]
+                
+                val = self.read_addr(addr1, active_mode)
+                #~dont overwrite as this is copy not move
+                #~write val to new address
+                self.write_addr(addr2, val, active_mode)
+                
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.JumpIfTrue:
+                #~ find the location
+                arg1_as_read = args[0]
+                location_as_read = args[1]
+                location = self.get_absolute_location(location_as_read, active_mode)
+
+                #~ check if true
+                read_value = self.read_addr(arg1_as_read, active_mode)
+                is_true = self.cast_type(read_value, "bool")
+                
+                #~ jump to the location if true
+                if is_true:
+                    self.inst_ptr = location
+                else:
+                    self.inst_ptr += active_inst.nargs+1
+
             case ins.JumpTo:
                 #~ find the location
                 location_as_read = args[0]
@@ -155,7 +257,7 @@ class CPQUProcessor:
             case _ as bad_inst:
                 print(f"unknown instruction {bad_inst.__name__} with args {args}")
         
-        print(self.inst_ptr)
+        # print(self.inst_ptr)
 
     def write_addr(self, addr: str, value, mode: RelativeMode | AbsoluteMode, cast_type=None,):
             if Registers.is_register(addr):
@@ -240,6 +342,9 @@ class CPQUProcessor:
 
             case ins.StoreInequality.name:
                 return ins.StoreInequality
+            
+            case ins.CastTo.name:
+                return ins.CastTo
 
             case ins.AddTo.name:
                 return ins.AddTo
@@ -265,8 +370,8 @@ class CPQUProcessor:
             case ins.CopyIfEqual.name:
                 return ins.CopyIfEqual
 
-            case ins.JumpIfEqual.name:
-                return ins.JumpIfEqual
+            case ins.JumpIfTrue.name:
+                return ins.JumpIfTrue
 
             case ins.JumpTo.name:
                 return ins.JumpTo
@@ -292,12 +397,19 @@ class CPQUProcessor:
             if next_char == "\"":
                 print("entering/exiting enclosing block")
                 in_enclosing_block = not in_enclosing_block
+            elif ((next_char == "#") and (not in_enclosing_block)):
+                print("entering comment block")
+                in_ignore_block = True
+            elif ((next_char == "\n") and in_ignore_block):
+                print("exiting comment block")
+                in_ignore_block = False
             else:
-                if (next_char not in [" ", "\n"]) or (in_enclosing_block):
+                if (((next_char not in [" ", "\n"]) or (in_enclosing_block)) and (not in_ignore_block)):
                     next_code += next_char
                 else:
-                    codes.append(next_code)
-                    next_code = ""
+                    if next_code != "":
+                        codes.append(next_code)
+                        next_code = ""
             if index < len(program)-1:
                 index += 1
             else:

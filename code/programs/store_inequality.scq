@@ -1,5 +1,10 @@
 mrel sto "a" str raa
-mrel sto "b" str rab
+mrel sto "a" str rab
 mrel sin str raa eqt rab rac
-mrel mov rac out
+mrel cpy rac out
+mrel cpy rac out
+mrel jit rac 4
+hlt
+mrel sto "oh intresting" str out
+# a line comment
 hlt

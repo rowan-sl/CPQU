@@ -1,4 +1,0 @@
-mrel sto "Hello World!" str out
-mrel jmp 7
-mrel sto "Oops something went wrong" str out
-hlt

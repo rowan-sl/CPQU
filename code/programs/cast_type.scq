@@ -1,0 +1,5 @@
+mrel sto "1" str raa
+mrel cpy raa out
+mrel cst raa int
+mrel cpy raa out
+hlt
