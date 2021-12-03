@@ -206,7 +206,7 @@ class CPQUProcessor:
 # """
 
 program = [
-    "rel", "sto", "Hello Wolrd!\n", "str", "out"
+    "rel", "sto", "Hello World!", "str", "out"
 ]
 
 computer = CPQUProcessor(program)

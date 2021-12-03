@@ -26,7 +26,7 @@ class Registers:
         assert self.is_register(reg)
         match reg:
             case "out":
-                sys.stdout.write(str(val))
+                print(val)
             case "ins":
                 pass
             case "tru":
