@@ -8,10 +8,10 @@ class RelativeMode(Mode):
     """
     Read things relative to the instruction_pointer
     """
-    name = "rel"
+    name = "mrel"
 
 class AbsoluteMode(Mode):
     """
     Read things by there absolute memory adress
     """
-    name = "abs"
+    name = "mabs"

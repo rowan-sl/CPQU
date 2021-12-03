@@ -21,3 +21,8 @@ class BadInstruction(ComputerError):
     """
     Encountered a instruction it dosent know what to do with
     """
+
+class AddressError(ComputerError):
+    """
+    You cant read from that address!
+    """

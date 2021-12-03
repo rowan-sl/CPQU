@@ -24,7 +24,7 @@ class StoreTo(Instruction):
     """
     Takes a value, a type, and a address, and writes the value to that adress as that type.
 
-    Supported types: `int`, `float`, `str`
+    Supported types: `int`, `float`, `str`, `bool`
 
     Useage: `<mode> sto <value> <type> <addr>`
     """
@@ -39,14 +39,17 @@ class StoreInequality(Instruction):
     and writes `tru` (builtin type) to `addr` if `operator` evaluats to true for `arg1` and `arg2` otherwise writes `fal`
 
     Values must be in a register, or in memory.
+    Values are cast to and compared as <type>
+    
+    Supported types: `int`, `float`, `str`, `bool`
 
-    see types.InequalityType for a list of supported types
+    see types.InequalityType for a list of supported inequalities
 
-    Useage: `<mode> sin <arg1> <arg2> <oper> <addr>`
+    Useage: `<mode> sin <type> <arg1> <oper> <arg2> <addr>`
     """
 
     name = "sin"
-    nargs = 4
+    nargs = 5
 
 
 class AddTo(Instruction):
@@ -54,11 +57,11 @@ class AddTo(Instruction):
     adds the first two arguments and stores it in the third
     Values must be in a register, or in memory.
 
-    Useage: `<mode> add <arg1> <arg2> <arg3>`
+    Useage: `<mode> add <type> <arg1> <arg2> <arg3>`
     """
 
     name = "add"
-    nargs = 3
+    nargs = 4
 
 
 class SubtractTo(Instruction):
@@ -68,11 +71,11 @@ class SubtractTo(Instruction):
 
     Basicaly the same as `add`, but for subtraction
 
-    Useage: `<mode> add <arg1> <arg2> <arg3>`
+    Useage: `<mode> add <type> <arg1> <arg2> <arg3>`
     """
 
     name = "sub"
-    nargs = 3
+    nargs = 4
 
 
 class MultiplyTo(Instruction):
@@ -82,11 +85,11 @@ class MultiplyTo(Instruction):
 
     Basicaly the same as `add`, but for multiplication
 
-    Useage: `<mode> mlt <arg1> <arg2> <arg3>`
+    Useage: `<mode> mlt <type> <arg1> <arg2> <arg3>`
     """
 
     name = "mlt"
-    nargs = 3
+    nargs = 4
 
 
 class DevideoTo(Instruction):
@@ -96,11 +99,11 @@ class DevideoTo(Instruction):
 
     Basicaly the same as `mlt`, but for devision
 
-    Useage: `<mode> div <arg1> <arg2> <arg3>`
+    Useage: `<mode> div <type> <arg1> <arg2> <arg3>`
     """
 
     name = "div"
-    nargs = 3
+    nargs = 4
 
 
 class MoveTo(Instruction):

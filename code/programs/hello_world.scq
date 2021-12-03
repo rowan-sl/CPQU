@@ -1,2 +1,2 @@
-rel sto "Hello, Wordl!" str out
+mrel sto "Hello, Wordl!" str out
 hlt

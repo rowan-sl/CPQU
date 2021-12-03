@@ -1,0 +1,5 @@
+mrel sto "a" str raa
+mrel sto "b" str rab
+mrel sin str raa eqt rab rac
+mrel mov rac out
+hlt
