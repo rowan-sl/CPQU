@@ -186,16 +186,6 @@ class CPQUProcessor:
         """
         dirty_codes = []
         [dirty_codes.extend(code) for code in [[opcode.strip() for opcode in line_opcodes] for line_opcodes in [line.split(" ") for line in program.splitlines()]]]
-        # word = ""
-        # for char in program:
-        #     if char == " ":
-        #         dirty_codes.append(word)
-        #         word = ""
-        #     else:
-        #         if char in ["\n"]:
-        #             continue
-        #         else:
-        #             word += char
 
         codes = []
         [codes.append(code) for code in dirty_codes if code not in [""]]
