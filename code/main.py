@@ -1,101 +1,11 @@
-from types.registers import *
-from errors.core_errors import *
-from types.comp_types import *
-from types.instructions import *
+import core.mess_with_pythonpath
 
-
-class Memory:
-    """
-    errr... a class to represent memory. provides usefull functions to deal with the memory.
-    """
-
-    def __init__(self, mem: list) -> None:
-        self.mem = []
-        for idx, val in enumerate(mem):
-            self.wat(val, idx)
-
-    def enlarge(self, ammount):
-        """
-        Increases the memory's size by ammount, initializing it to Null
-        """
-        assert ammount > 0
-        self.mem += [Null] * ammount
-
-    def enlarge_to(self, addr):
-        """
-        extends the memorys size so that the max adress is addr
-        """
-        current_max = self.size()
-        self.enlarge(addr - current_max)
-
-    def shrink_wrap(self):
-        """
-        Remove all Null memory at the end of memory, reducing to size 0 if necessary.
-        Returns the number of values removed
-        """
-        removed = 0
-        while True:
-            if len(self.mem) == 0:
-                # nothing can be removed
-                return removed
-
-            if self.mem[-1] == Null:
-                # remove the null
-                del self.mem[-1]
-                # count it
-                removed += 1
-
-            else:
-                # not a null value, return
-                return removed
-
-    def reset(self):
-        """
-        Reset the memory, also sets size to 0
-        """
-        self.mem.clear()
-
-    def wat(self, val, adr):
-        """
-        Writes val to adr.
-        If adr is larger than the maximum address in memory, raises SegmentationFault
-        """
-        if adr > self.size():
-            # & oopsie whoopsise poopsise you messed up
-            raise SegmentionFault(
-                f"Cannot set {val} at {adr}, as {adr} is larger than the maximun adress ({self.size()})!!"
-            )
-
-        elif adr < 0:
-            # & what did you expect
-            raise ValueError("adr cannot be less than 0!")
-
-        else:
-            self.mem[adr] = val
-
-    def rat(self, adr):
-        """
-        Reads and returns the value at adr.
-        If adr is not in mem, raises SegmentationFault
-        """
-        if adr > self.size():
-            # & oopsie whoopsise poopsise you messed up
-            raise SegmentionFault(
-                f"Cannot read value from {adr}, as {adr} is larger than the maximun adress ({self.size()})!!"
-            )
-
-        elif adr < 0:
-            # & what did you expect
-            raise ValueError("adr cannot be less than 0!")
-
-        else:
-            return self.mem[adr]
-
-    def size(self):
-        """
-        returns largest address that can be written to in memory
-        """
-        return len(self.mem) - 1
+from core.registers import Registers
+from errors.core_errors import SegmentionFault, BadInstruction
+from core.null import Null
+from core.memory import Memory
+from core.comp_types import *
+from core.instructions import *
 
 
 class Processor:
@@ -127,5 +37,61 @@ class Processor:
 
     """
     def __init__(self, program: list) -> None:
+        self.inst_ptr = 0
         self.mem = Memory(program)
         self.regs = Registers()
+
+    def do_next_step(self):
+        """
+        Advance the computer to the next step, doing all processing for that step and updating all variables.
+        """
+
+        active_inst_string = self.mem.rat(self.inst_ptr)
+        active_inst = self.parse_instruction_to_cls(active_inst_string)
+        if active_inst is False:
+            raise BadInstruction(f"Encountered non-instruction {active_inst_string} at {self.inst_ptr}!!")
+
+
+    def parse_instruction_to_cls(self, inst_str):
+        match inst_str:
+            case ExitProgram.name:
+                return ExitProgram
+
+            case StoreTo.name:
+                return StoreTo
+
+            case StoreInequality.name:
+                return StoreInequality
+
+            case AddTo.name:
+                return AddTo
+
+            case SubtractTo.name:
+                return SubtractTo
+
+            case MultiplyTo.name:
+                return MultiplyTo
+
+            case DevideoTo.name:
+                return DevideoTo
+
+            case MoveTo.name:
+                return MoveTo
+
+            case MoveIfEqual.name:
+                return MoveIfEqual
+
+            case CopyTo.name:
+                return CopyTo
+
+            case CopyIfEqual.name:
+                return CopyIfEqual
+
+            case JumpIfEqual.name:
+                return JumpIfEqual
+
+            case JumpTo.name:
+                return JumpTo
+
+            case _:
+                return False

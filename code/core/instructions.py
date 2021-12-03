@@ -128,6 +128,7 @@ class MoveIfEqual(Instruction):
     name = "meq"
     nargs = 4
 
+
 class CopyTo(Instruction):
     """
     copy a value at one address to another address
@@ -140,7 +141,7 @@ class CopyTo(Instruction):
     nargs = 2
 
 
-class CopyfEqual(Instruction):
+class CopyIfEqual(Instruction):
     """
     copy the value at `addr1` to `addr2`, if `arg1` and `arg2` are equal.
     Values must be in registers, or in memory.

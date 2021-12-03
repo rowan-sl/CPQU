@@ -1,10 +1,5 @@
 from typing import Any
-
-from registers import Registers
-
-
-class Null:
-    "v o i d"
+from core.registers import Registers
 
 
 class BaseCompType:

@@ -1,6 +1,6 @@
 import re
 import sys
-from comp_types import Null
+from core.null import Null
 
 class Registers:
     def __init__(self) -> None:

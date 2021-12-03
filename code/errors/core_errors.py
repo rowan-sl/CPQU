@@ -16,3 +16,8 @@ class SegmentionFault(ComputerError):
         print("Segmentation Fault")
         print("(core dumped)")
         super().__init__(*args, **kwdargs)
+
+class BadInstruction(ComputerError):
+    """
+    Encountered a instruction it dosent know what to do with
+    """
