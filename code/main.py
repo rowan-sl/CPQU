@@ -62,7 +62,7 @@ class CPQUProcessor:
         if active_mode is False:
             raise BadInstruction(f"Encountered non-mode string {active_mode_string} at {self.inst_ptr}!!")
         if active_mode is True:
-            print("exiting!")
+            print(f"program reached opcode `hlt` at addr {self.inst_ptr-1}, exiting gracefully!")
             sys.exit(0)
 
         #~ get the next opcode
@@ -201,16 +201,14 @@ class CPQUProcessor:
         [codes.append(code) for code in dirty_codes if code not in [""]]
         return codes
 
-# program = """
-# rel sto Hello str out
-# """
-
 program = [
-    "rel", "sto", "Hello World!", "str", "out"
+    "rel", "sto", "Hello World!", "str", "out",
+    "hlt",
 ]
 
 computer = CPQUProcessor(program)
 
 print(computer.mem.mem)
 
-computer.do_next_step()
+while True:
+    computer.do_next_step()
