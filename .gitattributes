@@ -1,2 +1,2 @@
-**.scq linguist-detectable=true
-**.scq linguist-language=StringCodeQ
+*.scq linguist-detectable=true
+*.scq linguist-language=StringCodeQ
