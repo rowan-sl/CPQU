@@ -63,7 +63,7 @@ class Memory:
         if adr > self.size():
             # & oopsie whoopsise poopsise you messed up
             raise SegmentionFault(
-                f"Cannot set `{val}` at `{adr}`, as `{adr}` is larger than the maximun adress ({self.size()})!!"
+                f"Cannot set `{val}` at `{adr}`, as `{adr}` is farther than the maximun adress ({self.size()})!!"
             )
 
         elif adr < 0:
@@ -81,7 +81,7 @@ class Memory:
         if adr > self.size():
             # & oopsie whoopsise poopsise you messed up
             raise SegmentionFault(
-                f"Cannot read value from {adr}, as {adr} is larger than the maximun adress ({self.size()})!!"
+                f"Cannot read value at address {adr}, as {adr} is farther than the maximun address ({self.size()})!!"
             )
 
         elif adr < 0:
