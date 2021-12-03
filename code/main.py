@@ -1,14 +1,18 @@
+from typing import List
+import sys
+
 import core.mess_with_pythonpath
 
 from core.registers import Registers
 from errors.core_errors import SegmentionFault, BadInstruction
 from core.null import Null
 from core.memory import Memory
+from core.modes import AbsoluteMode, RelativeMode
 from core.comp_types import *
 from core.instructions import *
 
 
-class Processor:
+class CPQUProcessor:
     """
     A bad processor.
 
@@ -36,9 +40,13 @@ class Processor:
     *although it must be allocated by the program to use it.
 
     """
-    def __init__(self, program: list) -> None:
+    def __init__(self, program: List[str] | str) -> None:
+        if type(program) == str:
+            program_opcodes = self.basic_parse_program(program)
+        else:
+            program_opcodes = program
         self.inst_ptr = 0
-        self.mem = Memory(program)
+        self.mem = Memory(program_opcodes)
         self.regs = Registers()
 
     def do_next_step(self):
@@ -46,17 +54,45 @@ class Processor:
         Advance the computer to the next step, doing all processing for that step and updating all variables.
         """
 
+        active_mode_string = self.mem.rat(self.inst_ptr)
+        self.inst_ptr += 1
+        active_mode = self.parse_mode(active_mode_string)
+
+        if active_mode is False:
+            raise BadInstruction(f"Encountered non-mode string {active_mode_string} at {self.inst_ptr}!!")
+        if active_mode is True:
+            print("exiting!")
+            sys.exit(0)
+
         active_inst_string = self.mem.rat(self.inst_ptr)
-        active_inst = self.parse_instruction_to_cls(active_inst_string)
+        self.inst_ptr += 1
+        active_inst = self.parse_opcode(active_inst_string)
         if active_inst is False:
             raise BadInstruction(f"Encountered non-instruction {active_inst_string} at {self.inst_ptr}!!")
 
-
-    def parse_instruction_to_cls(self, inst_str):
-        match inst_str:
+    def parse_mode(self, mode_str):
+        """
+        parse a mode string to a mode class
+        """
+        match mode_str:
             case ExitProgram.name:
-                return ExitProgram
+                #exit program must be dealt with here, since it has no mode
+                return True
 
+            case RelativeMode.name:
+                return RelativeMode
+
+            case AbsoluteMode.name:
+                return AbsoluteMode
+
+            case _:
+                return False
+
+    def parse_opcode(self, inst_str):
+        """
+        Parse a opcode to a instruction class
+        """
+        match inst_str:
             case StoreTo.name:
                 return StoreTo
 
@@ -95,3 +131,23 @@ class Processor:
 
             case _:
                 return False
+
+    def basic_parse_program(self, program: str) -> List[str]:
+        """
+        Basic parsing of the program into operations
+        """
+        dirty_codes = []
+        [dirty_codes.extend(code) for code in [[opcode.strip() for opcode in line_opcodes] for line_opcodes in [line.split(" ") for line in program.splitlines()]]]
+        
+        codes = []
+        [codes.append(code) for code in dirty_codes if code not in [""]]
+        return codes
+
+program = """
+rel sto Hello str out
+
+"""
+
+computer = CPQUProcessor(program)
+
+print(computer.mem.mem)

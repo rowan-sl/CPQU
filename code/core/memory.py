@@ -9,8 +9,10 @@ class Memory:
 
     def __init__(self, mem: list) -> None:
         self.mem = []
+        self.enlarge_to(len(mem))
         for idx, val in enumerate(mem):
             self.wat(val, idx)
+        self.shrink_wrap()
 
     def enlarge(self, ammount):
         """
@@ -61,7 +63,7 @@ class Memory:
         if adr > self.size():
             # & oopsie whoopsise poopsise you messed up
             raise SegmentionFault(
-                f"Cannot set {val} at {adr}, as {adr} is larger than the maximun adress ({self.size()})!!"
+                f"Cannot set `{val}` at `{adr}`, as `{adr}` is larger than the maximun adress ({self.size()})!!"
             )
 
         elif adr < 0:

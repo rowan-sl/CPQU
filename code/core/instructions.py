@@ -30,13 +30,13 @@ class StoreTo(Instruction):
     """
 
     name = "sto"
-    nargs = "3"
+    nargs = 3
 
 
 class StoreInequality(Instruction):
     """
     Takes two arguments (addresses), a operator, and a addr,
-    and writes `tru` (builtin type) to `addr` if `operator` evaluats to true for `arg1` and `arg2`
+    and writes `tru` (builtin type) to `addr` if `operator` evaluats to true for `arg1` and `arg2` otherwise writes `fal`
 
     Values must be in a register, or in memory.
 

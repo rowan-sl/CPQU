@@ -21,7 +21,7 @@ class Registers:
             return True
 
         return False
-    
+
     def write(self, reg, val):
         assert self.is_register(reg)
         match reg:
