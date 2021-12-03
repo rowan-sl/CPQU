@@ -1,5 +1,7 @@
+from types.registers import *
 from errors.core_errors import *
-from representation_types import *
+from types.comp_types import *
+from types.instructions import *
 
 
 class Memory:
@@ -96,8 +98,34 @@ class Memory:
         return len(self.mem) - 1
 
 
-class Computer:
-    def __init__(self, program: list) -> None:
-        ...
+class Processor:
+    """
+    A bad processor.
 
-raise SegmentionFault("oopsie")
+    features that are not implemented are makred with a *
+
+    *On initialization, it takes a program (list of oprators) and writes it to its own memory, which the program can then use.
+
+    *The processor has a instruction pointer, which points to the current instruction being run.
+    *After a instruction is run, it increments the instruction pointer by (at least) 1, generaly by how many arguments it takes.
+    *however, some instructions can make the pointer jump to a new location.
+
+    *Each instruction has a mode before it (ex: <mode> <instruction>), which controlls how arguments are read from registers.
+    *A mode of abs means that it is the absolute index in memory, and a mode of rel means the relative position to the instruction pointer
+
+    *The processor also has 52 data registers, denoted by r<register code> where register code is any two letters (a-z), and a few special ones, including:
+    *out: the standard output. what is written to it will be outputted
+    *ins: the instruction pointer
+    *tru: a value of true
+    *fal: a value of false
+    *nul: null value, also behaves like /dev/null
+
+    *each register and all memory not used by the program is initialized to Null.
+
+    *It has a infinite memory size (at least not limited by the language),
+    *although it must be allocated by the program to use it.
+
+    """
+    def __init__(self, program: list) -> None:
+        self.mem = Memory(program)
+        self.regs = Registers()
