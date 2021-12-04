@@ -1,2 +1,2 @@
 sto "Hello, Wordl!" str std
-hlt 0
+end

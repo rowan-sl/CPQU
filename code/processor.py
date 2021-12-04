@@ -7,6 +7,7 @@ from core.registers import Registers
 from errors.core_errors import AddressError, ExitSignal, NullPtr, SegmentionFault, BadInstruction
 from core.null import Null
 from core.memory import Memory
+from core.assembler import Assembler
 from core.modes import AbsoluteMode, RelativeMode
 from core.comp_types import *
 import core.instructions as ins
@@ -29,6 +30,23 @@ class CPQUProcessor:
     Each instruction has a mode before it (ex: <mode> <instruction>), which controlls how arguments are read from registers.
     A mode of abs means that it is the absolute index in memory, and a mode of rel means the relative position to the instruction pointer
 
+    !There is also the instruction `nop` which does nothing. very efficiently
+
+
+    !HOWEVER:
+    The addresses can be messed with when expanding macros, so please use address notation instead.
+
+    Addresses are defined with `@name` and referenced with `$name`.
+
+    The definition of a address means that a reference to that address will be replaced with the next thing after the adress definition, and the address definition will be replaced with nop
+
+    Address names must match the regular expresion [a-zA-Z1234567890_] (only alphabet letters, numbers, or underscores).
+
+    Adresses are globaly defined, no two addresses can have the same name.
+
+    Adresses are expanded to numbers in preprocessing, so self modifying code must use number references.
+
+
     The processor also has 52 data registers, denoted by r<register code> where register code is any two letters (a-z), and a few special ones, including:
     out: the standard output. what is written to it will be outputted
     ins: the instruction pointer
@@ -41,14 +59,23 @@ class CPQUProcessor:
     It has a infinite memory size (at least not limited by the language),
     although it must be allocated by the program to use it.
 
+
+    It also has some basic macros, including:
+
+    `end`: basicaly `hlt 0`
+    `fail<--insert reason here-->`: basicaly `sto --insert reason here-- str out hlt 1`
+
     TODO:
 
-    $ come up with things to do? nah
+    $ implement address notation
+
+    $ more macros?
     """
     def __init__(self) -> None:
         self.inst_ptr = 0
         self.mem = Memory([])
         self.regs = Registers(self)
+        self.assembler = Assembler()
 
         self.exit_code = None
         self.exit_desc = None
@@ -60,15 +87,13 @@ class CPQUProcessor:
         self.inst_ptr = 0
         self.regs.reset()
         self.mem.reset()
+        self.assembler = Assembler()
 
         self.exit_code = None
         self.exit_desc = None
 
-    def load_program(self, program: List[str] | str):
-        if type(program) == str:
-            parsed_program = self.parse_program(program)
-        else:
-            parsed_program = program
+    def load_program(self, program: str):
+        parsed_program = self.assembler.assemble(program)
         self.mem.load_memory(parsed_program)
 
     def run_till_done(self):
@@ -93,11 +118,14 @@ class CPQUProcessor:
 
         #~ get the next mode
         active_mode_string = self.mem.rat(self.inst_ptr)
+        if active_mode_string == "nop":
+            #! do nothing, this is where nop is defined
+            return
         active_mode = self.parse_mode(active_mode_string)
 
         if active_mode is False:
             if self.parse_opcode(active_mode_string) is not False:
-                active_mode = RelativeMode
+                active_mode = AbsoluteMode
             else:
                 if active_mode_string == Null:
                     raise NullPtr(f"Encounterd Null value at {self.inst_ptr}, was expecting a instruction!")
@@ -493,42 +521,3 @@ class CPQUProcessor:
 
             case _:
                 return False
-
-    def parse_program(self, program: str) -> List[str]:
-        """
-        Basic parsing of the program into operations
-        """
-        codes = []
-
-        next_code = ""
-        in_ignore_block = False
-        in_enclosing_block = False
-
-        index = 0
-        while True:
-            next_char = program[index]
-            # print(next_char)
-            # print(in_enclosing_block)
-            if next_char == "\"":
-                # print("entering/exiting enclosing block")
-                in_enclosing_block = not in_enclosing_block
-            elif ((next_char == "#") and (not in_enclosing_block)):
-                # print("entering comment block")
-                in_ignore_block = True
-            elif ((next_char == "\n") and in_ignore_block):
-                # print("exiting comment block")
-                in_ignore_block = False
-            else:
-                if (((next_char not in [" ", "\n"]) or (in_enclosing_block)) and (not in_ignore_block)):
-                    next_code += next_char
-                else:
-                    if next_code != "":
-                        codes.append(next_code)
-                        next_code = ""
-            if index < len(program)-1:
-                index += 1
-            else:
-                codes.append(next_code)
-                break
-
-        return [code for code in codes if code not in [""]]
