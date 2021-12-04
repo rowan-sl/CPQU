@@ -1,0 +1,8 @@
+sto "This program will echo values from stdin to stdout untill the user enters `quit`" str std
+sto "quit" str rex
+cpy std rin
+cpy rin std
+sin str rin eqt rex rev
+jit rev 6
+mabs jmp 8
+hlt

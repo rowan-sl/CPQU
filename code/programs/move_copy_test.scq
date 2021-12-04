@@ -1,0 +1,23 @@
+sto "Testing all, all should sucseed" str std
+sto "Testing Sucsess" str raa
+meq tru tru raa std
+sto "Testing Sucsess" str raa
+ceq tru tru raa std
+meq fal fal raa std
+sto "Testing Sucsess" str raa
+ceq fal fal raa std
+meq raa raa raa std
+sto "Testing Sucsess" str raa
+ceq raa raa raa std
+meq nul nul raa std
+sto "Testing Sucsess" str raa
+sto "Testing all, nothing should print" str std
+meq fal tru raa std
+meq tru fal raa std
+ceq fal tru raa std
+ceq tru fal raa std
+meq raa fal raa std
+sto "Testing Sucsess" str raa
+ceq tru raa raa std
+meq fal nul raa std
+hlt

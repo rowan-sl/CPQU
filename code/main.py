@@ -26,25 +26,28 @@ class CPQUProcessor:
 
     !important! mem address 1 is the first address!
 
-    *Each instruction has a mode before it (ex: <mode> <instruction>), which controlls how arguments are read from registers.
-    *A mode of abs means that it is the absolute index in memory, and a mode of rel means the relative position to the instruction pointer
+    Each instruction has a mode before it (ex: <mode> <instruction>), which controlls how arguments are read from registers.
+    A mode of abs means that it is the absolute index in memory, and a mode of rel means the relative position to the instruction pointer
 
-    *The processor also has 52 data registers, denoted by r<register code> where register code is any two letters (a-z), and a few special ones, including:
+    The processor also has 52 data registers, denoted by r<register code> where register code is any two letters (a-z), and a few special ones, including:
     out: the standard output. what is written to it will be outputted
     ins: the instruction pointer
     tru: a value of true
     fal: a value of false
     nul: null value, also behaves like /dev/null
 
-    *each register and all memory not used by the program is initialized to Null.
+    each register and all memory not used by the program is initialized to Null.
 
-    *It has a infinite memory size (at least not limited by the language),
+    It has a infinite memory size (at least not limited by the language),
     *although it must be allocated by the program to use it.
 
+    TODO:
+    $ Implement syscalls
+    $ implement the standard input
     """
     def __init__(self, program: List[str] | str) -> None:
         if type(program) == str:
-            program_opcodes = self.basic_parse_program(program)
+            program_opcodes = self.parse_program(program)
         else:
             program_opcodes = program
         self.inst_ptr = 0
@@ -219,15 +222,44 @@ class CPQUProcessor:
                 
                 self.inst_ptr += active_inst.nargs+1
 
+            case ins.MoveIfEqual:
+                arg1 = args[0]
+                arg2 = args[1]
+                addr1 = args[2]
+                addr2 = args[3]
+
+                if self.read_addr(arg1, active_mode) == self.read_addr(arg2, active_mode):
+                    val = self.read_addr(addr1, active_mode)
+                    #~overwrite old val, as this is a move instruction
+                    self.write_addr(addr1, Null, active_mode)
+                    #~write val to new address
+                    self.write_addr(addr2, val, active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
             case ins.CopyTo:
                 addr1 = args[0]
                 addr2 = args[1]
-                
+
                 val = self.read_addr(addr1, active_mode)
                 #~dont overwrite as this is copy not move
                 #~write val to new address
                 self.write_addr(addr2, val, active_mode)
-                
+
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.CopyIfEqual:
+                arg1 = args[0]
+                arg2 = args[1]
+                addr1 = args[2]
+                addr2 = args[3]
+
+                if self.read_addr(arg1, active_mode) == self.read_addr(arg2, active_mode):
+                    val = self.read_addr(addr1, active_mode)
+                    #~dont overwrite as this is copy not move
+                    #~write val to new address
+                    self.write_addr(addr2, val, active_mode)
+
                 self.inst_ptr += active_inst.nargs+1
 
             case ins.JumpIfTrue:
@@ -243,6 +275,7 @@ class CPQUProcessor:
                 #~ jump to the location if true
                 if is_true:
                     self.inst_ptr = location
+                    # print(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
                 else:
                     self.inst_ptr += active_inst.nargs+1
 
@@ -253,6 +286,8 @@ class CPQUProcessor:
 
                 #~ jump to the location
                 self.inst_ptr = location
+                
+                # print(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
 
             case _ as bad_inst:
                 print(f"unknown instruction {bad_inst.__name__} with args {args}")
@@ -313,7 +348,7 @@ class CPQUProcessor:
                     raise ValueError(f"cannot cast {value} to bool!")
             case _:
                 raise ValueError(f"unknown type {type}")
-    
+
     def parse_mode(self, mode_str):
         """
         parse a mode string to a mode class
@@ -379,7 +414,7 @@ class CPQUProcessor:
             case _:
                 return False
 
-    def basic_parse_program(self, program: str) -> List[str]:
+    def parse_program(self, program: str) -> List[str]:
         """
         Basic parsing of the program into operations
         """
@@ -392,16 +427,16 @@ class CPQUProcessor:
         index = 0
         while True:
             next_char = program[index]
-            print(next_char)
-            print(in_enclosing_block)
+            # print(next_char)
+            # print(in_enclosing_block)
             if next_char == "\"":
-                print("entering/exiting enclosing block")
+                # print("entering/exiting enclosing block")
                 in_enclosing_block = not in_enclosing_block
             elif ((next_char == "#") and (not in_enclosing_block)):
-                print("entering comment block")
+                # print("entering comment block")
                 in_ignore_block = True
             elif ((next_char == "\n") and in_ignore_block):
-                print("exiting comment block")
+                # print("exiting comment block")
                 in_ignore_block = False
             else:
                 if (((next_char not in [" ", "\n"]) or (in_enclosing_block)) and (not in_ignore_block)):
@@ -418,22 +453,7 @@ class CPQUProcessor:
 
         return [code for code in codes if code not in [""]]
 
-# program = [
-#     "mrel", "sto", "Hello World!", "str", "out",
-#     "mrel", "jmp", "7",
-#     "mrel", "sto", "Oops something went wrong", "str", "out",
-#     "hlt",
-# ]
 
-# str_prgrm = """
-# mrel sto "Hello World!" str out
-# mrel jmp 7
-# mrel sto "Oops something went wrong" str out
-# hlt
-# """
-
-# print(CPQUProcessor.basic_parse_program(CPQUProcessor, str_prgrm))
-# sys.exit(0)
 
 with open(sys.argv[1], "r") as f:
     program = f.read()

@@ -11,7 +11,7 @@ class Registers:
     @staticmethod
     def is_register(name):
         if name in [
-            "out",
+            "std",
             "ins",
             "tru",
             "fal",
@@ -27,7 +27,7 @@ class Registers:
     def write(self, reg, val):
         assert self.is_register(reg)
         match reg:
-            case "out":
+            case "std":
                 print(f"stdout ({type(val)}):", val)
             case "ins":
                 pass
@@ -48,14 +48,14 @@ class Registers:
     def read(self, reg):
         assert self.is_register(reg)
         match reg:
-            case "out":
-                return AddressError
+            case "std":
+                return input()
             case "ins":
                 return self.computer.inst_ptr
             case "tru":
-                return AddressError
+                return True
             case "fal":
-                return AddressError
+                return False
             case "nul":
                 return Null
             case _:

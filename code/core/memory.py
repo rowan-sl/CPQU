@@ -13,7 +13,7 @@ class Memory:
         for idx, val in enumerate(mem):
             self.wat(val, idx)
         self.shrink_wrap()
-        print("memory initialized to\n", self.mem)
+        # print("memory initialized to\n", self.mem)
 
     def enlarge(self, ammount):
         """

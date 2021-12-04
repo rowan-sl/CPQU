@@ -141,8 +141,6 @@ class MoveIfEqual(Instruction):
     move a `addr1` to `addr2`, if `arg1` and `arg2` are equal.
     Values must be in registers, or in memory.
 
-    This is basicaly a shortcut for `rel jeq <arg1> <arg2> 3 <mode> mov <addr1> <addr2>`
-
     Useage: `<mode> meq <arg1> <arg2> <addr1> <addr2>`
     """
 
