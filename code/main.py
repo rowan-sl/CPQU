@@ -39,9 +39,10 @@ class CPQUProcessor:
     each register and all memory not used by the program is initialized to Null.
 
     It has a infinite memory size (at least not limited by the language),
-    *although it must be allocated by the program to use it.
+    although it must be allocated by the program to use it.
 
     TODO:
+
     $ come up with things to do? nah
     """
     def __init__(self, program: List[str] | str) -> None:
@@ -68,7 +69,6 @@ class CPQUProcessor:
                 else:
                     print("error whilst running program!")
                     raise e
-                
 
     def do_next_step(self):
         """
@@ -516,8 +516,6 @@ class CPQUProcessor:
                 break
 
         return [code for code in codes if code not in [""]]
-
-
 
 with open(sys.argv[1], "r") as f:
     program = f.read()
