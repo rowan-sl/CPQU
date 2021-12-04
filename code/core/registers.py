@@ -15,10 +15,10 @@ class Registers:
             "syscl.a3": Null,
         }
         self.syscall_results = deque()
-    
+
     def add_syscall_res(self, results: list):
         self.syscall_results.extend(results)
-    
+
     def clear_syscall_regs(self):
         self.syscall_regs = {
             "syscl.id": Null,
@@ -26,10 +26,18 @@ class Registers:
             "syscl.a2": Null,
             "syscl.a3": Null,
         }
-    
+
     def clear_syscall_res(self):
         self.syscall_results.clear()
-    
+
+    def reset(self):
+        """
+        Resets all registers
+        """
+        self.clear_syscall_regs()
+        self.clear_syscall_res()
+        self.regs = {}
+
     @staticmethod
     def is_register(name):
         if name in [

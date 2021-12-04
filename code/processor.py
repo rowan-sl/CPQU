@@ -45,17 +45,31 @@ class CPQUProcessor:
 
     $ come up with things to do? nah
     """
-    def __init__(self, program: List[str] | str) -> None:
-        if type(program) == str:
-            program_opcodes = self.parse_program(program)
-        else:
-            program_opcodes = program
+    def __init__(self) -> None:
         self.inst_ptr = 0
-        self.mem = Memory(program_opcodes)
+        self.mem = Memory([])
         self.regs = Registers(self)
 
         self.exit_code = None
         self.exit_desc = None
+
+    def reset(self):
+        """
+        Resets the computer, clearing all memory and data
+        """
+        self.inst_ptr = 0
+        self.regs.reset()
+        self.mem.reset()
+
+        self.exit_code = None
+        self.exit_desc = None
+
+    def load_program(self, program: List[str] | str):
+        if type(program) == str:
+            parsed_program = self.parse_program(program)
+        else:
+            parsed_program = program
+        self.mem.load_memory(parsed_program)
 
     def run_till_done(self):
         while True:

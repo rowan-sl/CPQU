@@ -8,12 +8,31 @@ class Memory:
     """
 
     def __init__(self, mem: list) -> None:
-        self.mem = []
-        self.enlarge_to(len(mem))
-        for idx, val in enumerate(mem):
-            self.wat(val, idx)
+        self.mem = mem
         self.shrink_wrap()
-        # print("memory initialized to\n", self.mem)
+
+    def reset(self):
+        """
+        Clears and resets the memory
+        """
+        self.mem = []
+
+    def load_memory(self, mem: list):
+        """
+        Resets and loads `mem` into memory
+        """
+        self.reset()
+        self.mem.extend(mem)
+
+    def get_precentage_used(self) -> float:
+        """
+        Returns the percentage of memory used (not null)
+        """
+        num_of_null = self.mem.count(Null)
+        total = len(self.mem)
+        perc_str = str(total/num_of_null)
+        dec_index = perc_str.index(".")
+        return float(perc_str[0:dec_index+3])
 
     def enlarge(self, ammount):
         """
