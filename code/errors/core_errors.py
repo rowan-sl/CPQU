@@ -7,6 +7,12 @@ class ComputerError(Exception):
     """
 
 
+class ComputerSignal(Exception):
+    """
+    Signal to other parts of the computer
+    """
+
+
 class SegmentionFault(ComputerError):
     """
     (Core Dumped). This means that something tried to read or write where it shouldent have
@@ -25,4 +31,14 @@ class BadInstruction(ComputerError):
 class AddressError(ComputerError):
     """
     You cant read from that address!
+    """
+
+class NullPtr(ComputerError):
+    """
+    program enocounterd a null value where it shouldent have
+    """
+
+class ExitSignal(ComputerSignal):
+    """
+    Signal that the program should exit
     """

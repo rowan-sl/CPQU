@@ -4,7 +4,7 @@ import sys
 import core.mess_with_pythonpath
 
 from core.registers import Registers
-from errors.core_errors import AddressError, SegmentionFault, BadInstruction
+from errors.core_errors import AddressError, ExitSignal, NullPtr, SegmentionFault, BadInstruction
 from core.null import Null
 from core.memory import Memory
 from core.modes import AbsoluteMode, RelativeMode
@@ -42,8 +42,7 @@ class CPQUProcessor:
     *although it must be allocated by the program to use it.
 
     TODO:
-    $ Implement syscalls
-    $ implement the standard input
+    $ come up with things to do? nah
     """
     def __init__(self, program: List[str] | str) -> None:
         if type(program) == str:
@@ -53,6 +52,23 @@ class CPQUProcessor:
         self.inst_ptr = 0
         self.mem = Memory(program_opcodes)
         self.regs = Registers(self)
+
+        self.exit_code = None
+        self.exit_desc = None
+
+    def run_till_done(self):
+        while True:
+            try:
+                self.do_next_step()
+            except BaseException as e:
+                if isinstance(e, ExitSignal):
+                    print(self.exit_desc)
+                    print(f"Program exited with exit code {self.exit_code}")
+                    break
+                else:
+                    print("error whilst running program!")
+                    raise e
+                
 
     def do_next_step(self):
         """
@@ -67,12 +83,54 @@ class CPQUProcessor:
             if self.parse_opcode(active_mode_string) is not False:
                 active_mode = RelativeMode
             else:
-                raise BadInstruction(f"Encountered non-mode string {active_mode_string} at {self.inst_ptr}!!")
+                if active_mode_string == Null:
+                    raise NullPtr(f"Encounterd Null value at {self.inst_ptr}, was expecting a instruction!")
+                else:
+                    raise BadInstruction(f"Encountered non-mode value {active_mode_string} at {self.inst_ptr}!!")
         else:
             self.inst_ptr += 1
+
         if active_mode is True:
-            print(f"program reached opcode `hlt` at addr {self.inst_ptr-1}, exiting gracefully!")
-            sys.exit(0)
+            code = self.mem.rat(self.inst_ptr)
+            try:
+                code = int(code)
+            except BaseException as e:
+                self.exit_desc = f"could not parse exit code! it must be a number, not {code}"
+                self.exit_code = 200
+                raise ExitSignal()
+                # raise e
+            if code == 0:
+                self.exit_desc = f"reached opcode `hlt` at addr {self.inst_ptr-1}, exiting gracefully with code {code}"
+            else:
+                self.exit_desc = f"reached opcode `hlt` at addr {self.inst_ptr-1}, exited with error code {code}"
+            self.exit_code = code
+            raise ExitSignal()
+        
+        if active_mode == ins.Syscall:
+            #$ perform syscall
+            self.regs.clear_syscall_res()
+            id = self.regs.syscall_regs["syscl.id"]
+            a1 = self.regs.syscall_regs["syscl.a1"]
+            a2 = self.regs.syscall_regs["syscl.a2"]
+            a3 = self.regs.syscall_regs["syscl.a3"]
+            match id:
+                case "malloc":
+                    match a1:
+                        case "extby":
+                            #extends the memory by a2
+                            amnt = int(a2)
+                            self.mem.enlarge(amnt)
+                            self.regs.add_syscall_res([True])
+                        case "extto":
+                            #extends the memory to addres in a2
+                            amnt = int(a2)
+                            self.mem.enlarge_to(amnt)
+                            self.regs.add_syscall_res([True])
+                    self.regs.clear_syscall_regs()
+                case _:
+                    self.regs.clear_syscall_regs()
+                    self.regs.add_syscall_res([False])
+            return
 
         #~ get the next opcode
         active_inst_string = self.mem.rat(self.inst_ptr)
@@ -215,8 +273,9 @@ class CPQUProcessor:
                 addr2 = args[1]
                 
                 val = self.read_addr(addr1, active_mode)
-                #~overwrite old val, as this is a move instruction
-                self.write_addr(addr1, Null, active_mode)
+                #~overwrite old val, as this is a move instruction, as long is it isnt "std" (stdin/stdout) to avoid writing null to stdout when moving from stdin
+                if addr1 != "std":
+                    self.write_addr(addr1, Null, active_mode)
                 #~write val to new address
                 self.write_addr(addr2, val, active_mode)
                 
@@ -230,10 +289,11 @@ class CPQUProcessor:
 
                 if self.read_addr(arg1, active_mode) == self.read_addr(arg2, active_mode):
                     val = self.read_addr(addr1, active_mode)
-                    #~overwrite old val, as this is a move instruction
+                #~overwrite old val, as this is a move instruction, as long is it isnt "std" (stdin/stdout) to avoid writing null to stdout when moving from stdin
+                if addr1 != "std":
                     self.write_addr(addr1, Null, active_mode)
-                    #~write val to new address
-                    self.write_addr(addr2, val, active_mode)
+                #~write val to new address
+                self.write_addr(addr2, val, active_mode)
 
                 self.inst_ptr += active_inst.nargs+1
 
@@ -303,8 +363,9 @@ class CPQUProcessor:
 
             else:
                 location = self.get_absolute_location(addr, mode)
-
-                self.mem.wat(self.cast_type(value, cast_type), location)
+                if cast_type is not None:
+                    value = self.cast_type(value, cast_type)
+                self.mem.wat(value, location)
 
     def read_addr(self, addr: str, mode: RelativeMode | AbsoluteMode):
         if Registers.is_register(addr):
@@ -357,6 +418,9 @@ class CPQUProcessor:
             case ins.ExitProgram.name:
                 #exit program must be dealt with here, since it has no mode
                 return True
+            
+            case ins.Syscall.name:
+                return ins.Syscall
 
             case RelativeMode.name:
                 return RelativeMode
@@ -460,7 +524,7 @@ with open(sys.argv[1], "r") as f:
 
 computer = CPQUProcessor(program)
 
+print(computer.mem.size())
 print(computer.mem.mem)
 
-while True:
-    computer.do_next_step()
+computer.run_till_done()

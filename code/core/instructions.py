@@ -16,6 +16,16 @@ class ExitProgram(Instruction):
     """
 
     name = "hlt"
+    nargs = 1
+    requires_mode = False
+
+
+class Syscall(Instruction):
+    """
+    Performs a syscall, based on the arguments in the sycall registers
+    """
+
+    name = "syscall"
     nargs = 0
     requires_mode = False
 

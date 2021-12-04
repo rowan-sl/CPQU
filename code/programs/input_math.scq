@@ -1,0 +1,17 @@
+sto "malloc" str syscl.id
+sto "extto" str syscl.a1
+sto 110 int syscl.a2
+syscall
+mov syscl.res raa
+jit raa 5
+hlt 1
+sto "please enter a number" str std
+mabs cpy std 101
+sto "please enter another number" str std
+mabs mov std 102
+mabs sin int 101 eqt 102 ret
+jit ret 9
+sto "the first number is not equal to the second" str std
+hlt 0
+sto "the first number is equal to the second" str std
+hlt 0

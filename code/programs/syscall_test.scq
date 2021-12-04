@@ -1,0 +1,11 @@
+sto "malloc" str syscl.id
+sto "extto" str syscl.a1
+sto  150 int syscl.a2
+syscall
+mov syscl.res std
+mov syscl.res std
+mov syscl.res std
+mov syscl.res std
+mabs sto "test 1" str 100
+mabs cpy 100 std
+hlt 0
