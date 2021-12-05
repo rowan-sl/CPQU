@@ -176,6 +176,18 @@ class CPQUProcessor:
                             self.mem.enlarge_to(amnt)
                             self.regs.add_syscall_res([True])
                     self.regs.clear_syscall_regs()
+                case "rfile":
+                    assert a1 != ""
+                    assert self.regs.is_register(a2)
+                    try:
+                        with open(a1, "r") as f:
+                            content = f.read()
+                        self.regs.write(a2, content)
+                        self.regs.add_syscall_res([True])
+                    except FileNotFoundError as e:
+                        print(e)
+                        self.regs.add_syscall_res([False])
+                    self.regs.clear_syscall_regs()
                 case _:
                     self.regs.clear_syscall_regs()
                     self.regs.add_syscall_res([False])
@@ -200,6 +212,7 @@ class CPQUProcessor:
         # print(self.inst_ptr)
 
         #~ do a thing with that
+        if self.debug:print(self.inst_ptr, active_inst, args)
         match active_inst:
             case ins.StoreTo:
                 value_as_read = args[0]
