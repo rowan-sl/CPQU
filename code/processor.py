@@ -488,13 +488,8 @@ class CPQUProcessor:
     def cast_type(self, value, type_to_cast):
         if self.debug:print("cast", value, type_to_cast)
         if type(value) == str:
-            print(type(value), value)
             value = str(value)
-            print(type(value), value)
-            print(value.__getattribute__("startswith"))
-            print(str.startswith(value, "*"))
             if value.startswith("*"):
-                print("eee")
                 if self.debug:print("recasting value of reg")
                 assert self.regs.is_register(value[1:])
                 read_value = self.read_addr(value[1:], AbsoluteMode)

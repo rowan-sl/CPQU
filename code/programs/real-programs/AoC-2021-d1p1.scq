@@ -1,11 +1,11 @@
-sto "malloc" str syscl.id
-sto "extto" str syscl.a1
-sto 200 int syscl.a2
-syscall
-mov syscl.res raa
-jit raa $past_err
-fail<"Could not allocate memory!">
-@past_err
+# sto "malloc" str syscl.id
+# sto "extto" str syscl.a1
+# sto 200 int syscl.a2
+# syscall
+# mov syscl.res raa
+# jit raa $past_err
+# fail<"Could not allocate memory!">
+# @past_err
 
 sto "199,200,208,210,200,207,240,269,260,263" str rin #program input
 
@@ -23,6 +23,7 @@ ssi rin *rid rat#current value at rid
 
 sin str rat eqt $seperator req
 
+end
 jit req $is_seperator
 jmp $is_next_num_char
 

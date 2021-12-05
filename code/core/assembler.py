@@ -50,7 +50,7 @@ class Assembler:
                 if addr_name not in address_definitions.keys():
                     raise ValueError(f"address {addr_name} is referenced at index {index} but never defined!")
 
-                parsed_prog.append(address_definitions[addr_name])
+                parsed_prog.append(str(address_definitions[addr_name]))
 
             elif orig_opcode.startswith("@"):
                 parsed_prog.append("nop")

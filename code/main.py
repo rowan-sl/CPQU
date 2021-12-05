@@ -5,7 +5,7 @@ from processor import CPQUProcessor
 with open(sys.argv[1], "r") as f:
     program = f.read()
 
-computer = CPQUProcessor(True)
+computer = CPQUProcessor(False)
 computer.load_program(program)
 
 print("Memory size:")
