@@ -7,7 +7,8 @@ class Memory:
     errr... a class to represent memory. provides usefull functions to deal with the memory.
     """
 
-    def __init__(self, mem: list) -> None:
+    def __init__(self, mem: list, dbg_io) -> None:
+        self.dbg_io = dbg_io
         self.mem = mem
         self.shrink_wrap()
 
@@ -76,7 +77,7 @@ class Memory:
         self.mem.clear()
 
     def wat(self, val, adr):
-        # print(f"writing {val} to {adr}")
+        if self.dbg_io:print(f"writing {val} to {adr}")
         """
         Writes val to adr.
         If adr is larger than the maximum address in memory, raises SegmentationFault
@@ -113,7 +114,7 @@ class Memory:
             raise ValueError("adr cannot be less than 0!")
 
         else:
-            # print(f"reading value {self.mem[adr]} from {adr}")
+            if self.dbg_io:print(f"reading value {self.mem[adr]} from {adr}")
             return self.mem[adr]
 
     def size(self):

@@ -209,3 +209,23 @@ class JumpTo(Instruction):
 
     name = "jmp"
     nargs = 1
+
+class StoreStringIndex(Instruction):
+    """
+    Store a value from a string index
+
+    Useage: `<mode> ssi <string> <index> <result_addr>
+    """
+
+    name = "ssi"
+    nargs = 3
+
+class StoreStringLen(Instruction):
+    """
+    Stores the length of the first argument to the second
+    
+    Useage: `<mode> ssl <string> <output>
+    """
+    
+    name = "ssl"
+    nargs = 2

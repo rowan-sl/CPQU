@@ -1,0 +1,44 @@
+sto "malloc" str syscl.id
+sto "extto" str syscl.a1
+sto 200 int syscl.a2
+syscall
+mov syscl.res raa
+jit raa $past_err
+fail<"Could not allocate memory!">
+@past_err
+
+sto "199,200,208,210,200,207,240,269,260,263" str rin #program input
+
+sto "0" str rls#current number (being built)
+
+sto 0 int rid #index
+sto 1 int ric#increment ammount
+ssl rin rmx#store length of input to max string thing
+
+@loop_start
+sin int rid geq rmx rgt#greater than or equal to max index, so exit loop
+jit rgt $loop_end
+
+ssi rin *rid rat#current value at rid
+
+sin str rat eqt $seperator req
+
+jit req $is_seperator
+jmp $is_next_num_char
+
+@is_seperator
+jmp $loop_iter_end
+
+@is_next_num_char
+jmp $loop_iter_end
+
+@loop_iter_end
+
+add int rid ric rid
+jmp $loop_start
+
+@loop_end
+end
+
+@seperator ","
+@num_increases 0

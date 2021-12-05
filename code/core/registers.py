@@ -5,7 +5,8 @@ from core.null import Null
 from collections import deque
 
 class Registers:
-    def __init__(self, computer) -> None:
+    def __init__(self, computer, debug_io) -> None:
+        self.dbg_io = debug_io
         self.computer = computer
         self.regs = {}
         self.syscall_regs = {
@@ -62,6 +63,7 @@ class Registers:
 
     def write(self, reg, val):
         assert self.is_register(reg)
+        if self.dbg_io:print(f"writing {val} to register {reg}")
         match reg:
             case "std":
                 print(f"stdout ({type(val)}):", val)
@@ -94,6 +96,7 @@ class Registers:
 
     def read(self, reg):
         assert self.is_register(reg)
+        if self.dbg_io:print(f"read from register {reg}")
         match reg:
             case "std":
                 return input()

@@ -45,6 +45,8 @@ class CPQUProcessor:
     Adresses are globaly defined, no two addresses can have the same name.
 
     Adresses are expanded to numbers in preprocessing, so self modifying code must use number references.
+    
+    In addition, when refering to a address, you can provide the value as a register, using `*reg_name`
 
 
     The processor also has 52 data registers, denoted by r<register code> where register code is any two letters (a-z), and a few special ones, including:
@@ -71,10 +73,11 @@ class CPQUProcessor:
 
     $ more macros?
     """
-    def __init__(self) -> None:
+    def __init__(self, debug) -> None:
+        self.debug = debug
         self.inst_ptr = 0
-        self.mem = Memory([])
-        self.regs = Registers(self)
+        self.mem = Memory([], self.debug)
+        self.regs = Registers(self, self.debug)
         self.assembler = Assembler()
 
         self.exit_code = None
@@ -115,11 +118,13 @@ class CPQUProcessor:
         """
         Advance the computer to the next step, doing all processing for that step and updating all variables.
         """
+        # print(self.inst_ptr, self.mem.rat(self.inst_ptr))
 
         #~ get the next mode
         active_mode_string = self.mem.rat(self.inst_ptr)
         if active_mode_string == "nop":
             #! do nothing, this is where nop is defined
+            self.inst_ptr += 1
             return
         active_mode = self.parse_mode(active_mode_string)
 
@@ -393,12 +398,47 @@ class CPQUProcessor:
                 
                 # print(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
 
+            case ins.StoreStringIndex:
+                in_str_addr = args[0]
+                index_str = args[1]
+                out_addr = args[2]
+
+                in_str = self.read_addr(in_str_addr, active_mode)
+                index = self.cast_type(index_str, "int")
+                value_at_i = in_str[index]
+                self.write_addr(out_addr, value_at_i, active_mode)
+                
+                self.inst_ptr += active_inst.nargs+1
+
+            case ins.StoreStringLen:
+                string = args[0]
+                addr2 = args[1]
+
+                val = self.read_addr(string, active_mode)
+
+                #~write len of val to new address
+                self.write_addr(addr2, len(val), active_mode)
+
+                self.inst_ptr += active_inst.nargs+1
+
             case _ as bad_inst:
                 print(f"unknown instruction {bad_inst.__name__} with args {args}")
-        
+
         # print(self.inst_ptr)
 
     def write_addr(self, addr: str, value, mode: RelativeMode | AbsoluteMode, cast_type=None,):
+
+        if addr.startswith("*"):
+            if Registers.is_register(addr[1:]):
+                #writing to a address, but from the address stored in a register
+                deref_addr = self.regs.read(addr[1:])
+
+                location = self.get_absolute_location(deref_addr, mode)
+                if cast_type is not None:
+                    value = self.cast_type(value, cast_type)
+                self.mem.wat(value, location)
+
+        else:
             if Registers.is_register(addr):
                 if cast_type is not None:
                     self.regs.write(addr, self.cast_type(value, cast_type))
@@ -412,20 +452,29 @@ class CPQUProcessor:
                 self.mem.wat(value, location)
 
     def read_addr(self, addr: str, mode: RelativeMode | AbsoluteMode):
-        if Registers.is_register(addr):
-            val = self.regs.read(addr)
-            if val is AddressError:
-                print("registry read error!!\nregistry dump:")
-                print(self.regs.regs)
-                raise AddressError(f"Cannot read from regestry {addr}!!")
-            return val
+        if addr.startswith("*"):
+            if Registers.is_register(addr[1:]):
+                #reading from a address, but from the address stored in a register
+                deref_addr = self.regs.read(addr[1:])
+
+                location = self.get_absolute_location(deref_addr, mode)
+                return self.mem.rat(location)
 
         else:
-            location = self.get_absolute_location(addr, mode)
+            if Registers.is_register(addr):
+                val = self.regs.read(addr)
+                if val is AddressError:
+                    print("registry read error!!\nregistry dump:")
+                    print(self.regs.regs)
+                    raise AddressError(f"Cannot read from regestry {addr}!!")
+                return val
 
-            return self.mem.rat(location)
+            else:
+                location = self.get_absolute_location(addr, mode)
 
-    def get_absolute_location(self, addr, mode):
+                return self.mem.rat(location)
+
+    def get_absolute_location(self, addr: str, mode):
         location: int
 
         if mode == RelativeMode:
@@ -436,8 +485,23 @@ class CPQUProcessor:
 
         return location
 
-    def cast_type(self, value, type):
-        match type:
+    def cast_type(self, value, type_to_cast):
+        if self.debug:print("cast", value, type_to_cast)
+        if type(value) == str:
+            print(type(value), value)
+            value = str(value)
+            print(type(value), value)
+            print(value.__getattribute__("startswith"))
+            print(str.startswith(value, "*"))
+            if value.startswith("*"):
+                print("eee")
+                if self.debug:print("recasting value of reg")
+                assert self.regs.is_register(value[1:])
+                read_value = self.read_addr(value[1:], AbsoluteMode)
+                if self.debug:print("read value", read_value, "from reg, now casting to", type_to_cast)
+                return self.cast_type(read_value, type_to_cast)#abs mode because it dosent matter, its a register
+
+        match type_to_cast:
             case "str":
                 return str(value)
             case "int":
@@ -452,7 +516,7 @@ class CPQUProcessor:
                 else:
                     raise ValueError(f"cannot cast {value} to bool!")
             case _:
-                raise ValueError(f"unknown type {type}")
+                raise ValueError(f"unknown type {type_to_cast}")
 
     def parse_mode(self, mode_str):
         """
@@ -518,6 +582,12 @@ class CPQUProcessor:
 
             case ins.JumpTo.name:
                 return ins.JumpTo
+            
+            case ins.StoreStringIndex.name:
+                return ins.StoreStringIndex
+            
+            case ins.StoreStringLen.name:
+                return ins.StoreStringLen
 
             case _:
                 return False
