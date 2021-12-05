@@ -7,7 +7,16 @@ jit raa $past_err
 fail<"Could not allocate memory!">
 @past_err
 
-sto "199,200,208,210,200,207,240,269,260,263," str rin #program input
+sto "rfile" str syscl.id
+sto "day-1.txt" str syscl.a1
+sto "rin" str syscl.a2#address of result
+syscall
+mov syscl.res raa
+jit raa $past_f_error
+fail<"Could not read file!">
+@past_f_error
+
+# sto "199,200,208,210,200,207,240,269,260,263," str rin #program input
 
 sto "0" str rcn#current number (being built)
 sto "e" str rls#last number
