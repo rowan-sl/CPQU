@@ -1,8 +1,9 @@
 import re
 import sys
-from errors.core_errors import AddressError
-from core.null import Null
 from collections import deque
+
+from core.errors.comp_errors import AddressError
+from core.types.null import Null
 
 class Registers:
     def __init__(self, computer, debug_io) -> None:

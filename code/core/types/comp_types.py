@@ -1,5 +1,5 @@
 from typing import Any
-from core.registers import Registers
+from core.lang.registers import Registers
 
 
 class BaseCompType:

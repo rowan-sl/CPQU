@@ -1,5 +1,5 @@
-from core.null import Null
-from errors.core_errors import SegmentionFault
+from core.types.null import Null
+from core.errors.comp_errors import SegmentionFault
 
 
 class Memory:

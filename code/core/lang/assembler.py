@@ -2,22 +2,109 @@ from typing import (
     List
 )
 import re
+from dataclasses import dataclass
+
+@dataclass
+class DefineDefinition:
+    """
+    class to represent one definition of SCQ's define<>{} functionality.
+    """
+    name: str
+    args: list[str]
+    inner_code: list[str]
 
 
 class Assembler:
-    def __init__(self) -> None:
-        pass
+    """
+    avengers...
+    """
+    def __init__(self, computer) -> None:
+        self.computer = computer
+        # self.define_definition_re = re.compile(
+        #     r"define ?[a-zA-Z_][a-zA-Z_1234567890]* <( *[a-zA-Z_][a-zA-Z_1234567890]* *,* *)*> *{[^}]*}",
+        #     flags=re.MULTILINE,
+        # )
+        # self.define_definition_re_v2 = re.compile(
+        #     r"(define) ?([a-zA-Z_][a-zA-Z_1234567890]*) (<( *[a-zA-Z_][a-zA-Z_1234567890]* *,* *)*>) *{([^}]*)}",
+        #     re.MULTILINE,
+        # )
+        # self.define_definition_re_v3 = re.compile(
+        #     r"(define) ?([a-zA-Z_][a-zA-Z_1234567890]*) (<( *[a-zA-Z_][a-zA-Z_1234567890]* *,* *)*>) *{",
+        #     re.MULTILINE,
+        # )#use a while loop to avoid getting the ending } wrong
 
     def assemble(self, program):
         """
         Does all necessary preprocessing/parsing of a program to turn it into bare instructions for the processor
         """
-        parsed_prog = self.parse_program(program)
-        expand_prog = self.expand_macros(parsed_prog)
-        expand_addr = self.expand_addresses(expand_prog)
-        return expand_addr
+        print("avengers...")
+        
+        comments_removed = self.remove_comments(program)
+        
+        print("removed comments")
+        print(comments_removed)
 
-    def expand_addresses(self, program: List[str]):
+        # defines_expanded = self.expand_defines(comments_removed)
+
+        # print("expanded defines")
+        # print(defines_expanded)
+
+        parsed_prog = self.parse_program(comments_removed)
+
+        print("basic parsed program")
+        print(parsed_prog)
+
+        expand_prog = self.expand_macros(parsed_prog)
+
+        print("expand macros")
+        print(expand_prog)
+
+        expand_addr = self.expand_addresses(expand_prog)
+
+        print("addr expanded")
+        print(expand_addr)
+
+        markers_removed = self.remove_str_markers(expand_addr)
+
+        print("assemble")
+        print(markers_removed)
+        print("assembly done")
+
+        return markers_removed
+
+    def remove_comments(self, program: str) -> str:
+        """
+        removes all line comments from a program
+        """
+        return re.sub(r"#.*", "", program)#its that simple
+
+    # def expand_defines(self, program: str) -> List[str]:
+    #     """
+    #     Expand all defines in program into the full code
+    #     should take place after removal of code comments, but before anything else
+    #     """
+    #     all_defines = re.findall(self.define_definition_re_v3, program)#doesnt work, bc it returns a tuple, and this needs to have data about where in the program it is
+    #     print("\n---------------defines------------------\n\n")
+    #     for define in all_defines:
+    #         print(define)
+    #         print(define)
+    #     print("\n---------------end defines--------------\n")
+    #     return program
+
+    def remove_str_markers(self, program: List[str]) -> List[str]:
+        """
+        remove string markers, like `"` from the code. usefull to avoid things messing up confusing strings with other things in other
+        steps of assembling. should be the last step in the assembly process.
+        """
+        codes = []
+        for code in program:
+            if (code.startswith("\"") and code.endswith("\"")):
+                codes.append(code[1:-2])
+            else:
+                codes.append(code)
+        return codes
+
+    def expand_addresses(self, program: List[str]) -> List[str]:
         """
         Expands addresses, notated as `@name` (definition) and `$name` (reference),
         into their numeric representation.
@@ -65,7 +152,7 @@ class Assembler:
         print(address_definitions)
         return parsed_prog
 
-    def expand_macros(self, program: List[str]):
+    def expand_macros(self, program: List[str]) -> List[str]:
         """
         Expands macros into there full definition
         """
@@ -108,7 +195,6 @@ class Assembler:
         codes = []
 
         next_code = ""
-        in_ignore_block = False
         in_enclosing_block = False
 
         index = 0
@@ -118,15 +204,10 @@ class Assembler:
             # print(in_enclosing_block)
             if next_char == "\"":
                 # print("entering/exiting enclosing block")
+                next_code += "\""
                 in_enclosing_block = not in_enclosing_block
-            elif ((next_char == "#") and (not in_enclosing_block)):
-                # print("entering comment block")
-                in_ignore_block = True
-            elif ((next_char == "\n") and in_ignore_block):
-                # print("exiting comment block")
-                in_ignore_block = False
             else:
-                if (((next_char not in [" ", "\n"]) or (in_enclosing_block)) and (not in_ignore_block)):
+                if ((next_char not in [" ", "\n"]) or (in_enclosing_block)):
                     next_code += next_char
                 else:
                     if next_code != "":

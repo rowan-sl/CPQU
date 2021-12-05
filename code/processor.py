@@ -3,14 +3,27 @@ import sys
 
 import core.mess_with_pythonpath
 
-from core.registers import Registers
-from errors.core_errors import AddressError, ExitSignal, NullPtr, SegmentionFault, BadInstruction
-from core.null import Null
-from core.memory import Memory
-from core.assembler import Assembler
-from core.modes import AbsoluteMode, RelativeMode
-from core.comp_types import *
-import core.instructions as ins
+from core.lang.registers import Registers
+from core.errors.comp_errors import (
+    AddressError,
+    ExitSignal,
+    NullPtr,
+    SegmentionFault,
+    BadInstruction
+)
+from core.types.null import Null
+from core.lang.memory import Memory
+from core.lang.assembler import Assembler
+from core.lang.builtins import Builtins
+from core.types.modes import (
+    AbsoluteMode,
+    RelativeMode
+)
+from core.types.comp_types import (
+    InequalityType,
+    Address
+)
+import core.types.instructions as ins
 
 
 class CPQUProcessor:
@@ -78,7 +91,8 @@ class CPQUProcessor:
         self.inst_ptr = 0
         self.mem = Memory([], self.debug)
         self.regs = Registers(self, self.debug)
-        self.assembler = Assembler()
+        self.builtins = Builtins()
+        self.assembler = Assembler(self)
 
         self.exit_code = None
         self.exit_desc = None
@@ -90,7 +104,8 @@ class CPQUProcessor:
         self.inst_ptr = 0
         self.regs.reset()
         self.mem.reset()
-        self.assembler = Assembler()
+        self.builtins = Builtins()
+        self.assembler = Assembler(self)
 
         self.exit_code = None
         self.exit_desc = None
@@ -154,7 +169,7 @@ class CPQUProcessor:
                 self.exit_desc = f"reached opcode `hlt` at addr {self.inst_ptr-1}, exited with error code {code}"
             self.exit_code = code
             raise ExitSignal()
-        
+
         if active_mode == ins.Syscall:
             #$ perform syscall
             self.regs.clear_syscall_res()
