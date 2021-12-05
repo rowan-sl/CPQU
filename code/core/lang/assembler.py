@@ -4,6 +4,8 @@ from typing import (
 import re
 from dataclasses import dataclass
 
+from core.lang.macros.template.macro import Macro
+
 @dataclass
 class DefineDefinition:
     """
@@ -18,8 +20,9 @@ class Assembler:
     """
     avengers...
     """
-    def __init__(self, computer) -> None:
+    def __init__(self, computer, macros: List[Macro]) -> None:
         self.computer = computer
+        self.macros = macros
         # self.define_definition_re = re.compile(
         #     r"define ?[a-zA-Z_][a-zA-Z_1234567890]* <( *[a-zA-Z_][a-zA-Z_1234567890]* *,* *)*> *{[^}]*}",
         #     flags=re.MULTILINE,
@@ -38,16 +41,11 @@ class Assembler:
         Does all necessary preprocessing/parsing of a program to turn it into bare instructions for the processor
         """
         print("avengers...")
-        
+
         comments_removed = self.remove_comments(program)
-        
+
         print("removed comments")
         print(comments_removed)
-
-        # defines_expanded = self.expand_defines(comments_removed)
-
-        # print("expanded defines")
-        # print(defines_expanded)
 
         parsed_prog = self.parse_program(comments_removed)
 
@@ -77,19 +75,6 @@ class Assembler:
         removes all line comments from a program
         """
         return re.sub(r"#.*", "", program)#its that simple
-
-    # def expand_defines(self, program: str) -> List[str]:
-    #     """
-    #     Expand all defines in program into the full code
-    #     should take place after removal of code comments, but before anything else
-    #     """
-    #     all_defines = re.findall(self.define_definition_re_v3, program)#doesnt work, bc it returns a tuple, and this needs to have data about where in the program it is
-    #     print("\n---------------defines------------------\n\n")
-    #     for define in all_defines:
-    #         print(define)
-    #         print(define)
-    #     print("\n---------------end defines--------------\n")
-    #     return program
 
     def remove_str_markers(self, program: List[str]) -> List[str]:
         """
@@ -158,33 +143,16 @@ class Assembler:
         """
         parsed_prog = []
 
-        #index of current opcode in program
-        index = 0
-        while index < len(program):
-            orig_opcode = program[index]
-            #do not increment the index at the end of the loop
-            no_auto_index = False
-
-            match orig_opcode:
-                case "end":
-                    #exit with code 0 (sucsess)
-                    #! this is worth two instructions!
-                    parsed_prog.extend(["hlt", "0"])
-
-                case "fail":
-                    #exit with code 1 (error)
-                    #! this is worth two instructions!
-                    parsed_prog.extend(["hlt", "1"])
-
-                case match if re.search(f"fail<.+?>", orig_opcode) is not None:
-                    reason = match.removeprefix("fail<").removesuffix(">")
-                    parsed_prog.extend(["sto", "Program error: \""+reason+"\"", "str", "std", "hlt", "0"])
-
-                case _:
-                    parsed_prog.append(orig_opcode)
-
-            if not no_auto_index:
-                index += 1
+        for opcode in program:
+            for macro_cls in self.macros:
+                macro: Macro = macro_cls()
+                if macro.is_relevant(opcode):
+                    parsed_prog.extend(macro.get_expanded())
+                    del macro
+                    break
+                del macro
+            else:
+                parsed_prog.append(opcode)
 
         return parsed_prog
 

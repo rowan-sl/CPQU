@@ -1,2 +1,2 @@
-sto "Hello, World!" str std
+print<"Hello World!">
 end

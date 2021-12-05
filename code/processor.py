@@ -24,6 +24,12 @@ from core.types.comp_types import (
     Address
 )
 import core.types.instructions as ins
+#macros
+from core.lang.macros.end_fail_macro import (
+    EndMacro,
+    FailMacro
+)
+from core.lang.macros.print_macro import PrintMacro
 
 
 class CPQUProcessor:
@@ -86,13 +92,20 @@ class CPQUProcessor:
 
     $ more macros?
     """
+    
+    macro_list = [
+        EndMacro,
+        FailMacro,
+        PrintMacro,
+    ]
+    
     def __init__(self, debug) -> None:
         self.debug = debug
         self.inst_ptr = 0
         self.mem = Memory([], self.debug)
         self.regs = Registers(self, self.debug)
         self.builtins = Builtins()
-        self.assembler = Assembler(self)
+        self.assembler = Assembler(self, self.macro_list)
 
         self.exit_code = None
         self.exit_desc = None
@@ -105,7 +118,7 @@ class CPQUProcessor:
         self.regs.reset()
         self.mem.reset()
         self.builtins = Builtins()
-        self.assembler = Assembler(self)
+        self.assembler = Assembler(self, self.macro_list)
 
         self.exit_code = None
         self.exit_desc = None
