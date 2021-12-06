@@ -43,6 +43,7 @@ def create_actions_subcommand(parser: argparse.ArgumentParser):
         dest="output_file",
         metavar="FILE",
         type=pl.Path,
+        default=False,
         help="file to write the complied result to. by default it is the source file with the .cscq extension",
         required=False,
     )

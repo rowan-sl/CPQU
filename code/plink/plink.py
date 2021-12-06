@@ -27,7 +27,9 @@ init_logging(level, args.logfile)
 mlogger = logging.getLogger("MAIN")
 mlogger.critical(f"Initialized logging at level {get_level_name(level)}")
 mlogger.critical(f"{version_prefix}{version}")
-mlogger.critical(f"Pling is starting...")
+mlogger.critical(f"Plink is starting...")
+
+from core.template.scq_program import SCQProgram
 
 #& CPQU imports
 from cpqu.processor import CPQUProcessor
@@ -50,7 +52,7 @@ try:
     if args.run_file is not None:
         rfile: pl.Path = args.run_file
         assert rfile.exists()
-        mlogger.info(f"running {rfile}")
+        mlogger.info(f"running {rfile.name}")
         processor = CPQUProcessor()
         file_content: str | list
         compiled: bool
@@ -62,16 +64,18 @@ try:
             compiled = True
             try:
                 file_content = loads(file_bytes)
+                assert isinstance(file_content, SCQProgram)
+                file_content = file_content.instructions
             except BaseException as e:
-                print("A error occured while decoding the file. are you shure it is a assembled file?")
+                mlogger.critical("A error occured while decoding the file. are you shure it is a assembled file?")
                 if debug:
                     print(e)
                 sys.exit(1)
         else:
             if debug:
-                print("interpreting file type")
+                mlogger.program_startup("interpreting file type")
             if "." not in rfile.name:
-                print("File does not have a extension! you must specify the --is-assembled argument")
+                mlogger.critical("File does not have a extension! you must specify the --is-assembled argument")
                 sys.exit(1)
             extension = rfile.name.split(".")[-1]
             match extension:
@@ -83,13 +87,15 @@ try:
                     compiled = True
                     try:
                         file_content = loads(file_bytes)
+                        assert isinstance(file_content, SCQProgram)
+                        file_content = file_content.instructions
                     except BaseException as e:
-                        print("A error occured while decoding the file. are you shure it is a assembled file?")
+                        mlogger.critical("A error occured while decoding the file. are you shure it is a assembled file?")
                         if debug:
                             print(e)
                         sys.exit(1)
                 case _:
-                    print(f"unknown file extension {extension} for StringCodeQ file! you must specify the --is-assembled argument")
+                    mlogger.critical(f"unknown file extension {extension} for StringCodeQ file! you must specify the --is-assembled argument")
                     sys.exit(1)
         processor.load_program(file_content, compiled)
         processor.run_till_done()
@@ -97,6 +103,30 @@ except AttributeError as e:
     pass
 try:
     if args.assemble_file is not None:
-        print("assembling:", args.assemble_file)
+        afile: pl.Path = args.assemble_file
+
+        outfile: pl.Path | bool = args.output_file
+        mlogger.debug(f"{afile} -> {outfile}")
+        if outfile is False:
+            outfile = pl.Path("".join(afile.name.split(".")[:-1])+".cscq")
+            mlogger.debug(f"inmplying name {outfile}")
+
+        assert afile.exists()
+        assert not outfile.exists()
+
+        mlogger.info(f"Assembling {afile.name}")
+        file_content = afile.read_text()
+        assembler = Assembler(macro_list)
+        assembled = assembler.assemble(file_content)
+        mlogger.program_startup("serializing and writing output")
+        program = SCQProgram(
+            assembled
+        )
+        bdata = dumps(program)
+        outfile.write_bytes(bdata)
+        mlogger.info(f"Done!")
+        mlogger.info(f"wrote output to {outfile}")
 except AttributeError as e:
     pass
+
+mlogger.info("Exiting")
