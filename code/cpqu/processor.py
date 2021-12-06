@@ -1,5 +1,7 @@
 from typing import List
 import sys
+import logging
+logger = logging.getLogger("CPUProc")
 
 import core.mess_with_pythonpath
 
@@ -49,10 +51,10 @@ class CPQUProcessor:
     Each instruction has a mode before it (ex: <mode> <instruction>), which controlls how arguments are read from registers.
     A mode of abs means that it is the absolute index in memory, and a mode of rel means the relative position to the instruction pointer
 
-    !There is also the instruction `nop` which does nothing. very efficiently
+    &There is also the instruction `nop` which does nothing. very efficiently
 
 
-    !HOWEVER:
+    &HOWEVER:
     The addresses can be messed with when expanding macros, so please use address notation instead.
 
     Addresses are defined with `@name` and referenced with `$name`.
@@ -92,20 +94,20 @@ class CPQUProcessor:
 
     $ more macros?
     """
-    
+
     macro_list = [
         EndMacro,
         FailMacro,
         PrintMacro,
     ]
-    
-    def __init__(self, debug) -> None:
-        self.debug = debug
+
+    def __init__(self) -> None:
+        self.debug = False#! REMOVE THIS AND REPLACE w/ LOGGER
         self.inst_ptr = 0
         self.mem = Memory([], self.debug)
         self.regs = Registers(self, self.debug)
         self.builtins = Builtins()
-        self.assembler = Assembler(self, self.macro_list)
+        self.assembler = Assembler(self.macro_list)
 
         self.exit_code = None
         self.exit_desc = None
@@ -118,13 +120,16 @@ class CPQUProcessor:
         self.regs.reset()
         self.mem.reset()
         self.builtins = Builtins()
-        self.assembler = Assembler(self, self.macro_list)
+        self.assembler = Assembler(self.macro_list)
 
         self.exit_code = None
         self.exit_desc = None
 
-    def load_program(self, program: str):
-        parsed_program = self.assembler.assemble(program)
+    def load_program(self, program: str|list, compiled: bool=False):
+        if not compiled:
+            parsed_program = self.assembler.assemble(program)
+        else:
+            parsed_program = program
         self.mem.load_memory(parsed_program)
 
     def run_till_done(self):
@@ -133,11 +138,12 @@ class CPQUProcessor:
                 self.do_next_step()
             except BaseException as e:
                 if isinstance(e, ExitSignal):
-                    print(self.exit_desc)
-                    print(f"Program exited with exit code {self.exit_code}")
+                    logger.info(f"Program exited with desc:\n{self.exit_desc}\nand exit code {self.exit_code}")
                     break
                 else:
-                    print("error whilst running program!")
+                    logger.critical("error whilst running program!")
+                    logger.critical(e)
+                    logger.critical("Exiting because of program error")
                     raise e
 
         return self.exit_code
@@ -146,11 +152,12 @@ class CPQUProcessor:
         """
         Advance the computer to the next step, doing all processing for that step and updating all variables.
         """
-        # print(self.inst_ptr, self.mem.rat(self.inst_ptr))
+        logger.inst_trace(f"Doing next step for program. ins_ptr: {self.inst_ptr} mem @ ins_ptr: {self.mem.rat(self.inst_ptr)}")
 
         #~ get the next mode
         active_mode_string = self.mem.rat(self.inst_ptr)
         if active_mode_string == "nop":
+            logger.inst_call(f"nop instruction at address {self.inst_ptr}")
             #! do nothing, this is where nop is defined
             self.inst_ptr += 1
             return
@@ -158,6 +165,7 @@ class CPQUProcessor:
 
         if active_mode is False:
             if self.parse_opcode(active_mode_string) is not False:
+                logger.inst_trace(f"Inferring absolute mode at address {self.inst_ptr}")
                 active_mode = AbsoluteMode
             else:
                 if active_mode_string == Null:
@@ -184,12 +192,14 @@ class CPQUProcessor:
             raise ExitSignal()
 
         if active_mode == ins.Syscall:
+            logger.inst_call(f"Syscall triggered at address {self.inst_ptr-1}")
             #$ perform syscall
             self.regs.clear_syscall_res()
             id = self.regs.syscall_regs["syscl.id"]
             a1 = self.regs.syscall_regs["syscl.a1"]
             a2 = self.regs.syscall_regs["syscl.a2"]
             a3 = self.regs.syscall_regs["syscl.a3"]
+            logger.inst_call(f"Syscall args:\nid:{id}\na1:{a1}\na2:{a2}\na3:{a3}")
             match id:
                 case "malloc":
                     match a1:
@@ -213,7 +223,7 @@ class CPQUProcessor:
                         self.regs.write(a2, content)
                         self.regs.add_syscall_res([True])
                     except FileNotFoundError as e:
-                        print(e)
+                        logger.program_state(f"Error whilest reading file for program:\n{e}")
                         self.regs.add_syscall_res([False])
                     self.regs.clear_syscall_regs()
                 case _:
@@ -224,23 +234,20 @@ class CPQUProcessor:
         #~ get the next opcode
         active_inst_string = self.mem.rat(self.inst_ptr)
         active_inst = self.parse_opcode(active_inst_string)
+        logger.inst_trace(f"getting args for opcode {active_inst} ({active_inst_string}) at addr {self.inst_ptr}")
         if active_inst is False:
             raise BadInstruction(f"Encountered non-instruction {active_inst_string} at {self.inst_ptr}!!")
 
         #~ read the instruction's args
         args = []
-        # print(self.inst_ptr)
+        logger.mem_trace(f"Reading instructions for opcode")
         for i in range(active_inst.nargs):
-            # print(self.mem.mem)
-            # print(self.inst_ptr, self.mem.rat(self.inst_ptr))
+            logger.mem_trace(f"reading value from address {self.inst_ptr+i+1} for opcode args")
             args.append(self.mem.rat(self.inst_ptr+i+1))
-            # print(self.inst_ptr)
 
-        # print(active_inst.__name__, args)
-        # print(self.inst_ptr)
+        logger.inst_call(f"running opcode {active_inst.__name__} with args {args}")
 
         #~ do a thing with that
-        if self.debug:print(self.inst_ptr, active_inst, args)
         match active_inst:
             case ins.StoreTo:
                 value_as_read = args[0]
@@ -263,6 +270,8 @@ class CPQUProcessor:
                 operator = InequalityType(operator_as_read)
 
                 result: bool
+                
+                logging.spam(f"Store inequality with {arg1_val} {operator.value} {arg2_val}")
 
                 match operator.value:
                     case "ltn":
@@ -425,7 +434,7 @@ class CPQUProcessor:
                 #~ jump to the location if true
                 if is_true:
                     self.inst_ptr = location
-                    # print(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
+                    logger.ins_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
                 else:
                     self.inst_ptr += active_inst.nargs+1
 
@@ -436,8 +445,8 @@ class CPQUProcessor:
 
                 #~ jump to the location
                 self.inst_ptr = location
-                
-                # print(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
+
+                logger.ins_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
 
             case ins.StoreStringIndex:
                 in_str_addr = args[0]
@@ -468,7 +477,7 @@ class CPQUProcessor:
         # print(self.inst_ptr)
 
     def write_addr(self, addr: str, value, mode: RelativeMode | AbsoluteMode, cast_type=None,):
-
+        logger.comp_func(f"Calling write_addr with args {addr} {value} {mode} {cast_type}")
         if addr.startswith("*"):
             if Registers.is_register(addr[1:]):
                 #writing to a address, but from the address stored in a register
@@ -493,29 +502,36 @@ class CPQUProcessor:
                 self.mem.wat(value, location)
 
     def read_addr(self, addr: str, mode: RelativeMode | AbsoluteMode):
+        logger.comp_func(f"calling read_addr with args {addr} {mode}")
         if addr.startswith("*"):
             if Registers.is_register(addr[1:]):
                 #reading from a address, but from the address stored in a register
                 deref_addr = self.regs.read(addr[1:])
 
                 location = self.get_absolute_location(deref_addr, mode)
-                return self.mem.rat(location)
+                vat = self.mem.rat(location)
+                logger.spam(f"Read value {vat}")
+                return vat
 
         else:
             if Registers.is_register(addr):
                 val = self.regs.read(addr)
                 if val is AddressError:
-                    print("registry read error!!\nregistry dump:")
-                    print(self.regs.regs)
+                    logger.error(f"registry read error!!\nregistry dump:\n{self.regs.regs}")
                     raise AddressError(f"Cannot read from regestry {addr}!!")
+                logger.spam(f"Read value {val}")
                 return val
 
             else:
                 location = self.get_absolute_location(addr, mode)
 
-                return self.mem.rat(location)
+                val = self.mem.rat(location)
+
+                logger.spam(f"Read value {val}")
+                return val
 
     def get_absolute_location(self, addr: str, mode):
+        logger.comp_func(f"calling get_absolute_location with args {addr} {mode}")
         location: int
 
         if mode == RelativeMode:
@@ -527,14 +543,14 @@ class CPQUProcessor:
         return location
 
     def cast_type(self, value, type_to_cast):
-        if self.debug:print("cast", value, type_to_cast)
+        logger.comp_func(f"cast {value} {type_to_cast}")
         if type(value) == str:
             value = str(value)
             if value.startswith("*"):
-                if self.debug:print("recasting value of reg")
+                logger.spam("recasting value of reg")
                 assert self.regs.is_register(value[1:])
                 read_value = self.read_addr(value[1:], AbsoluteMode)
-                if self.debug:print("read value", read_value, "from reg, now casting to", type_to_cast)
+                logger.spam(f"read value {read_value} from reg, now casting to {type_to_cast}")
                 return self.cast_type(read_value, type_to_cast)#abs mode because it dosent matter, its a register
 
         match type_to_cast:
@@ -558,6 +574,7 @@ class CPQUProcessor:
         """
         parse a mode string to a mode class
         """
+        logger.spam(f"calling parse_mode with {mode_str}")
         match mode_str:
             case ins.ExitProgram.name:
                 #exit program must be dealt with here, since it has no mode
@@ -579,6 +596,7 @@ class CPQUProcessor:
         """
         Parse a opcode to a instruction class
         """
+        logger.spam(f"Calling parse_opcode with args {inst_str}")
         match inst_str:
             case ins.StoreTo.name:
                 return ins.StoreTo

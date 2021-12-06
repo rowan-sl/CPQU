@@ -20,8 +20,7 @@ class Assembler:
     """
     avengers...
     """
-    def __init__(self, computer, macros: List[Macro]) -> None:
-        self.computer = computer
+    def __init__(self, macros: List[Macro]) -> None:
         self.macros = macros
         # self.define_definition_re = re.compile(
         #     r"define ?[a-zA-Z_][a-zA-Z_1234567890]* <( *[a-zA-Z_][a-zA-Z_1234567890]* *,* *)*> *{[^}]*}",

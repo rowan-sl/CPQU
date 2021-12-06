@@ -1,0 +1,65 @@
+[CRITICAL][06/12/21::19:30:06]-->[plink.py][<module>]@[28] by [MAIN] in [MainProcess][MainThread]
+--->>> Initialized logging at level SPAMMER_LEVEL
+
+[CRITICAL][06/12/21::19:30:06]-->[plink.py][<module>]@[29] by [MAIN] in [MainProcess][MainThread]
+--->>> Plink v1.0.0
+
+[CRITICAL][06/12/21::19:30:06]-->[plink.py][<module>]@[30] by [MAIN] in [MainProcess][MainThread]
+--->>> Pling is starting...
+
+[INFO][06/12/21::19:30:06]-->[plink.py][<module>]@[45] by [MAIN] in [MainProcess][MainThread]
+--->>> Args: Namespace(version=False, verbose=13, logfile=PosixPath('test.log'), run_file=PosixPath('../examples/demos/hello_world.scq'), is_assembled=None)
+
+[INFO][06/12/21::19:30:06]-->[plink.py][<module>]@[53] by [MAIN] in [MainProcess][MainThread]
+--->>> running ../examples/demos/hello_world.scq
+
+[INST_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[155] by [CPUProc] in [MainProcess][MainThread]
+--->>> Doing next step for program. ins_ptr: 0 mem @ ins_ptr: sto
+
+[SPAM][06/12/21::19:30:06]-->[processor.py][parse_mode]@[577] by [CPUProc] in [MainProcess][MainThread]
+--->>> calling parse_mode with sto
+
+[SPAM][06/12/21::19:30:06]-->[processor.py][parse_opcode]@[599] by [CPUProc] in [MainProcess][MainThread]
+--->>> Calling parse_opcode with args sto
+
+[INST_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[168] by [CPUProc] in [MainProcess][MainThread]
+--->>> Inferring absolute mode at address 0
+
+[SPAM][06/12/21::19:30:06]-->[processor.py][parse_opcode]@[599] by [CPUProc] in [MainProcess][MainThread]
+--->>> Calling parse_opcode with args sto
+
+[INST_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[237] by [CPUProc] in [MainProcess][MainThread]
+--->>> getting args for opcode <class 'core.types.instructions.StoreTo'> (sto) at addr 0
+
+[MEM_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[243] by [CPUProc] in [MainProcess][MainThread]
+--->>> Reading instructions for opcode
+
+[MEM_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[245] by [CPUProc] in [MainProcess][MainThread]
+--->>> reading value from address 1 for opcode args
+
+[MEM_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[245] by [CPUProc] in [MainProcess][MainThread]
+--->>> reading value from address 2 for opcode args
+
+[MEM_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[245] by [CPUProc] in [MainProcess][MainThread]
+--->>> reading value from address 3 for opcode args
+
+[INST_CALL][06/12/21::19:30:06]-->[processor.py][do_next_step]@[248] by [CPUProc] in [MainProcess][MainThread]
+--->>> running opcode StoreTo with args ['Hello World', 'str', 'std']
+
+[COMP_FUNC][06/12/21::19:30:06]-->[processor.py][write_addr]@[480] by [CPUProc] in [MainProcess][MainThread]
+--->>> Calling write_addr with args std Hello World <class 'core.types.modes.AbsoluteMode'> str
+
+[COMP_FUNC][06/12/21::19:30:06]-->[processor.py][cast_type]@[546] by [CPUProc] in [MainProcess][MainThread]
+--->>> cast Hello World str
+
+[INST_TRACE][06/12/21::19:30:06]-->[processor.py][do_next_step]@[155] by [CPUProc] in [MainProcess][MainThread]
+--->>> Doing next step for program. ins_ptr: 4 mem @ ins_ptr: hlt
+
+[SPAM][06/12/21::19:30:06]-->[processor.py][parse_mode]@[577] by [CPUProc] in [MainProcess][MainThread]
+--->>> calling parse_mode with hlt
+
+[INFO][06/12/21::19:30:06]-->[processor.py][run_till_done]@[141] by [CPUProc] in [MainProcess][MainThread]
+--->>> Program exited with desc:
+reached opcode `hlt` at addr 4, exiting gracefully with code 0
+and exit code 0
+
