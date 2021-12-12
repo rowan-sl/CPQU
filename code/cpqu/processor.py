@@ -434,7 +434,7 @@ class CPQUProcessor:
                 #~ jump to the location if true
                 if is_true:
                     self.inst_ptr = location
-                    logger.ins_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
+                    logger.inst_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
                 else:
                     self.inst_ptr += active_inst.nargs+1
 
@@ -446,7 +446,7 @@ class CPQUProcessor:
                 #~ jump to the location
                 self.inst_ptr = location
 
-                logger.ins_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
+                logger.inst_trace(f"jumped to {self.inst_ptr}, value {self.mem.rat(self.inst_ptr)}")
 
             case ins.StoreStringIndex:
                 in_str_addr = args[0]

@@ -1,0 +1,17 @@
+define mallocto<addr> {
+    sto "malloc" str syscl.id
+    sto "extto" str syscl.a1
+    sto %addr int syscl.a2
+    syscall
+    mov syscl.res $mallocto_tmp
+    jit $mallocto_tmp $mallocto_past_err
+    fail<"Could not allocate memory!">
+    @mallocto_past_err
+    jmp $mallocto_past_data
+    @mallocto_tmp nop
+    @mallocto_past_data
+}
+!mallocto(500)
+sto "test" str 400
+mov 400 std
+end

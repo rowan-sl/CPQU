@@ -100,7 +100,7 @@ try:
         processor.load_program(file_content, compiled)
         processor.run_till_done()
 except AttributeError as e:
-    pass
+    raise e
 try:
     if args.assemble_file is not None:
         afile: pl.Path = args.assemble_file
