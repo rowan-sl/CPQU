@@ -11,7 +11,57 @@ define mallocto<addr> {
     @mallocto_tmp nop
     @mallocto_past_data
 }
-!mallocto(500)
-sto "test" str 400
-mov 400 std
+define memdump<> {
+    sto "Intentionally broken code to trigger a memory dump" str std
+    sto aas asdf lkdjf
+}
+define cpyblk<blk1s, blk1e, blk2> {
+    # copies data from the range blk1s (inclusive) to blk1e (exclusive) to a new range starting at blk2
+    sto 1 int $cpyblk_increment
+    sto 0 int $cpyblk_index
+    cpy tru $cpyblk_continue_iteration
+
+    sto %blk1s int $cpyblk_input_addr
+    sto %blk1e int $cpyblk_input_end_addr
+    sto %blk2 int $cpyblk_target_addr
+
+    sub int $cpyblk_input_end_addr $cpyblk_input_addr $cpyblk_max_index
+
+    @cpyblk_loop_start
+    #actualy copy the values
+    cpy *$cpyblk_input_addr *$cpyblk_target_addr
+
+    #increment indexes
+    add int $cpyblk_increment $cpyblk_index $cpyblk_index
+    add int $cpyblk_increment $cpyblk_input_addr $cpyblk_input_addr
+    add int $cpyblk_increment $cpyblk_target_addr $cpyblk_target_addr
+    #continue iterating if the index is less than max
+    sin int $cpyblk_index ltn $cpyblk_max_index $cpyblk_continue_iteration
+    #go back to loop start if so
+    jit $cpyblk_continue_iteration $cpyblk_loop_start
+
+    #data
+    jmp $cpyblk_past_data
+    #increment each loop cycle
+    @cpyblk_increment nop
+    #current and max values for loop iteration
+    @cpyblk_index nop
+    @cpyblk_max_index nop
+    #current addresees for input and output
+    @cpyblk_input_addr nop
+    @cpyblk_input_end_addr nop
+    @cpyblk_target_addr nop
+    #temp var for testing if should continue iteration
+    @cpyblk_continue_iteration nop
+    #temp var for last read value
+    @cpyblk_read_value nop
+    @cpyblk_past_data
+}
+!mallocto(1500)
+sto "t" str 900
+sto "e" str 901
+sto "s" str 902
+sto "t" str 903
+!cpyblk(900, 904, 1400)
+# !memdump()
 end

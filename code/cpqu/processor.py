@@ -144,6 +144,7 @@ class CPQUProcessor:
                     logger.critical("error whilst running program!")
                     logger.critical(e)
                     logger.critical("Exiting because of program error")
+                    logger.critical(f"Memory dump: {[[cell if cell is not Null else 'Null'][0] for cell in self.mem.mem]}")
                     raise e
 
         return self.exit_code
@@ -271,7 +272,7 @@ class CPQUProcessor:
 
                 result: bool
                 
-                logging.spam(f"Store inequality with {arg1_val} {operator.value} {arg2_val}")
+                logger.spam(f"Store inequality with {arg1_val} {operator.value} {arg2_val}")
 
                 match operator.value:
                     case "ltn":
@@ -478,6 +479,7 @@ class CPQUProcessor:
 
     def write_addr(self, addr: str, value, mode: RelativeMode | AbsoluteMode, cast_type=None,):
         logger.comp_func(f"Calling write_addr with args {addr} {value} {mode} {cast_type}")
+        addr = str(addr)
         if addr.startswith("*"):
             if Registers.is_register(addr[1:]):
                 #writing to a address, but from the address stored in a register
@@ -487,6 +489,10 @@ class CPQUProcessor:
                 if cast_type is not None:
                     value = self.cast_type(value, cast_type)
                 self.mem.wat(value, location)
+            else:
+                addr = self.read_addr(addr[1:], mode)
+                return self.write_addr(addr, value, mode)
+
 
         else:
             if Registers.is_register(addr):
@@ -503,6 +509,7 @@ class CPQUProcessor:
 
     def read_addr(self, addr: str, mode: RelativeMode | AbsoluteMode):
         logger.comp_func(f"calling read_addr with args {addr} {mode}")
+        addr = str(addr)
         if addr.startswith("*"):
             if Registers.is_register(addr[1:]):
                 #reading from a address, but from the address stored in a register
@@ -512,6 +519,9 @@ class CPQUProcessor:
                 vat = self.mem.rat(location)
                 logger.spam(f"Read value {vat}")
                 return vat
+            else:
+                addr = self.read_addr(addr[1:], mode)
+                return self.read_addr(addr, mode)
 
         else:
             if Registers.is_register(addr):

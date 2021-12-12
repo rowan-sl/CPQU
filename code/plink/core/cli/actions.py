@@ -15,6 +15,7 @@ def create_actions_subcommand(parser: argparse.ArgumentParser):
     subcommand_run.add_argument(
         "run_file",
         metavar="FILE",
+        default=None,
         type=pl.Path,
         help="SCQ file to run",
     )
@@ -33,6 +34,7 @@ def create_actions_subcommand(parser: argparse.ArgumentParser):
 
     subcommand_assemble.add_argument(
         "assemble_file",
+        default=None,
         metavar="FILE",
         type=pl.Path,
         help="SCQ file to assemble",

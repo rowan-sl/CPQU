@@ -8,6 +8,8 @@ import logging
 from core.lang.macros.template.macro import Macro
 from core.lang.builtins import Builtins
 
+from uuid import uuid4
+
 @dataclass
 class DefineDefinition:
     """
@@ -24,6 +26,7 @@ class DefineDefinition:
 
         This relplaces all occurences of arg_name with arg_value
         """
+        current_id = "id" + str(uuid4()).replace("-", "_")
         #TODO implement this
         res = []
         for inst in self.inner_code:
@@ -32,7 +35,19 @@ class DefineDefinition:
                 index = self.args.index(inst[1:])
                 res.append(arg_values[index])
             else:
-                res.append(inst)
+                #replace addresses with something unique
+                if inst.startswith("@") or inst.startswith("$"):
+                    pre = inst[0]
+                    end = inst[1:]
+                    res.append(pre + current_id + end)
+                elif inst.startswith("*"):
+                    #make shure its a ref
+                    assert inst[1] == "$"
+                    pre = inst[0]+inst[1]
+                    end = inst[2:]
+                    res.append(pre + current_id + end)
+                else:
+                    res.append(inst)
         return res
 
 def split_respect_strings(string: str, split_on: str, keep_markers: bool = False) -> list[str]:
@@ -250,6 +265,15 @@ class Assembler:
                     raise ValueError(f"address {addr_name} is referenced at index {index} but never defined!")
 
                 parsed_prog.append(str(address_definitions[addr_name]))
+            
+            elif orig_opcode.startswith("*"):
+                #make shure that it is a reference, not definition
+                assert orig_opcode[1] == "$"
+                addr_name = orig_opcode[2:]
+                if addr_name not in address_definitions.keys():
+                    raise ValueError(f"address {addr_name} is referenced at index {index} but never defined!")
+
+                parsed_prog.append("*" + str(address_definitions[addr_name]))
 
             elif orig_opcode.startswith("@"):
                 parsed_prog.append("nop")
