@@ -1,2 +1,7 @@
-sto "startup" str std
+sto "e" str std
+define print_t<val, type> {
+    sto %val %type std
+}
+sto "ee" str std
+!print_t("test", str)
 end

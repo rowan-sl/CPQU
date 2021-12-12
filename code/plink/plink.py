@@ -108,7 +108,11 @@ try:
         outfile: pl.Path | bool = args.output_file
         mlogger.debug(f"{afile} -> {outfile}")
         if outfile is False:
-            outfile = pl.Path("".join(afile.name.split(".")[:-1])+".cscq")
+            if args.write_text:
+                suffix = ".txt"
+            else:
+                suffix = ".cscq"
+            outfile = pl.Path("".join(afile.name.split(".")[:-1])+suffix)
             mlogger.debug(f"inmplying name {outfile}")
 
         assert afile.exists()
@@ -118,14 +122,20 @@ try:
         file_content = afile.read_text()
         assembler = Assembler(macro_list)
         assembled = assembler.assemble(file_content)
-        mlogger.program_startup("serializing and writing output")
-        program = SCQProgram(
-            assembled
-        )
-        bdata = dumps(program)
-        outfile.write_bytes(bdata)
-        mlogger.info(f"Done!")
-        mlogger.info(f"wrote output to {outfile}")
+        if not args.write_text:
+            mlogger.program_startup("serializing and writing output")
+            program = SCQProgram(
+                assembled
+            )
+            bdata = dumps(program)
+            outfile.write_bytes(bdata)
+            mlogger.info(f"Done!")
+            mlogger.info(f"wrote output to {outfile}")
+        elif args.write_text:
+            mlogger.program_startup("writing output as text")
+            outfile.write_text(str(assembled))
+            mlogger.info(f"Done!")
+            mlogger.info(f"wrote output to {outfile}")
 except AttributeError as e:
     pass
 

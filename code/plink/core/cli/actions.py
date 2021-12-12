@@ -37,6 +37,16 @@ def create_actions_subcommand(parser: argparse.ArgumentParser):
         type=pl.Path,
         help="SCQ file to assemble",
     )
+    
+    subcommand_assemble.add_argument(
+        "--write-text",
+        dest='write_text',
+        action='store_const',
+        const=True,
+        default=False,
+        help="Write stringified version of assembled instructions to file insead of normal output. cannot be loaded or ran",
+        required=False,
+    )
 
     subcommand_assemble.add_argument(
         "-o",
