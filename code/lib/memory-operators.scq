@@ -11,6 +11,7 @@ define mallocto<addr> {
     @mallocto_tmp nop
     @mallocto_past_data
 }
+
 define cpyblk<blk1s, blk1e, blk2> {
     # copies data from the range blk1s (inclusive) to blk1e (exclusive) to a new range starting at blk2
     sto 1 int $cpyblk_increment
@@ -53,11 +54,3 @@ define cpyblk<blk1s, blk1e, blk2> {
     @cpyblk_read_value nop
     @cpyblk_past_data
 }
-!mallocto(1500)
-sto "t" str 900
-sto "e" str 901
-sto "s" str 902
-sto "t" str 903
-!cpyblk(900, 904, 1400)
-lskdjflkajd
-end
